@@ -1,4 +1,4 @@
-# A package to solve multiple-phase Optimal Control Problems
+# A package to solve multiple-phase optimal control problems
 
 An p-phase optimal control problem can be stated in the following
 general form. Determine the state, ${\bf x^{(p)}}(t) \in \mathbb{R}^{n_{z}^{(p)}}$
@@ -52,3 +52,6 @@ states, inputs and final times, states, inputs between phases.
 2. Scaling
 3. Mesh recomputation
 4. Flexibility in formulating problems
+
+## Installation
+> add https://github.com/A-C1/DirectOptimalControl.jl
