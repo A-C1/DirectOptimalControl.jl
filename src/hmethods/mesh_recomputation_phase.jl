@@ -92,7 +92,7 @@ function calculate_interpolants(ph)
 
     S = interpolate(tp, x[1, :], BSplineOrder(4))
     Sd = diff(S, Derivative(1))
-    Su = interpolate(tp, u[1, :], BSplineOrder(3))
+    Su = interpolate(tp, u[1, :], BSplineOrder(4))
     Stype = typeof(S)
     SDtype = typeof(Sd)
     Sutype = typeof(Su)
@@ -110,7 +110,7 @@ function calculate_interpolants(ph)
     end
 
     for i = 1:ph.nu
-        Su = interpolate(tp, u[i, :], BSplineOrder(3))
+        Su = interpolate(tp, u[i, :], BSplineOrder(4))
         push!(Util, Su)
     end
 

@@ -1,5 +1,5 @@
 # Path and Integral Functions yet to be added
-mutable struct VarVals
+mutable struct VarVals0
     ti::Float64
     tf::Float64
     dt::Float64
@@ -12,26 +12,28 @@ mutable struct VarVals
     k::Vector{Float64}
 
 
-    function VarVals()
+    function VarVals0()
         return new()
     end
 end
 
-mutable struct Limits 
-    ul::VarVals
-    ll::VarVals
 
-    function Limits()
+mutable struct Limits0 
+    ul::VarVals0
+    ll::VarVals0
+
+    function Limits0()
         limit = new()
-        limit.ul = VarVals()
-        limit.ll = VarVals()
+        limit.ul = VarVals0()
+        limit.ll = VarVals0()
 
         return limit
     end
 end
 
 
-mutable struct PH
+
+mutable struct PH0
     id::Int64
     # Optimal control functions
     L::Function
@@ -49,7 +51,7 @@ mutable struct PH
     nk::Int64   # Free parameters dim
 
     # Limits on states and outputs
-    limits::Limits
+    limits::Limits0
 
     # Additional parameters to be stored
     p::NamedTuple
@@ -111,10 +113,11 @@ mutable struct PH
     kval::Vector{Float64}
 
     # Create container of constraints
-    collocation_constraints
-    quadrature_constraints
-    
-
+    collocation_constraints::Vector{Vector{ConstraintRef}}
+    quadrature_constraints_upper::Vector{ConstraintRef}
+    quadrature_constraints_lower::Vector{ConstraintRef}
+    path_constraints_upper::Vector{Vector{ConstraintRef}}
+    path_constraints_lower::Vector{Vector{ConstraintRef}}
 
     # collocation_method
     collocation_method::String
@@ -124,9 +127,9 @@ mutable struct PH
     set_initial_vals::String 
     scale_flag::Bool
 
-    function PH()
+    function PH0()
         ph = new()
-        ph.limits = Limits()
+        ph.limits = Limits0()
 
         ph.n = 0
         ph.ns = 0    
@@ -145,8 +148,9 @@ mutable struct PH
     end
 end
 
-mutable struct OCP
-    ph::Vector{PH}
+
+mutable struct OCP0
+    ph::Vector{PH0}
     model::Model
     psi::Function
 
@@ -181,7 +185,11 @@ mutable struct OCP
     objective_sense::String
     set_obj_lim::Bool
 
-    function OCP()
+    # Global constraints storage
+    event_constraints_upper::Vector{ConstraintRef}
+    event_constraints_lower::Vector{ConstraintRef}
+
+    function OCP0()
         x = new()
         x.model = Model()
         x.ph = PH[]
@@ -198,12 +206,15 @@ mutable struct OCP
     end
 end
 
-function PH(ocp::OCP)
-    ph = PH()
+function PH0(ocp::OCP0)
+    ph = PH0()
     ph.id = length(ocp.ph) + 1
     push!(ocp.ph, ph)
 
     return ph
 end
 
-PH = PH
+Limits = Limits0
+VarVals = VarVals0
+PH = PH0
+OCP = OCP0

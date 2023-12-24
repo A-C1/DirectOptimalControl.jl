@@ -38,7 +38,7 @@ function hermite_simpson(ph::PH, model::Model)
 
         dx = h[j] * (f1 + 4*fb + f2) / 6
 
-        @constraint(model, x[1:ns, j+1] .== x[1:ns, j] + dx)
+        ph.collocation_constraints[j] = @constraint(model, x[1:ns, j+1] .== x[1:ns, j] + dx)
     end
 end
 

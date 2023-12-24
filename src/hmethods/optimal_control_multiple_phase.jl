@@ -14,6 +14,9 @@ function add_phase(ph::PH, OC::OCP)
     (;dyn, n, ns, nu, nk, p) = ph
 
     model = OC.model
+    ph.collocation_constraints = Array{Vector{ConstraintRef}, 1}(undef,ph.n-1)
+    ph.path_constraints_lower = Array{Vector{ConstraintRef}, 1}(undef, ph.n)
+    ph.path_constraints_upper = Array{Vector{ConstraintRef}, 1}(undef, ph.n)
 
     if ph.set_initial_vals == "Auto" && OC.mesh_iter_no == 1
         println("tau setup automatically")
@@ -124,14 +127,14 @@ function add_quadrature_constraints(ph::PH, OC::OCP)
     else
         q = quadrature_simpson(ph.integralfun, ph.dyn, ph.nq, ph, false)
     end
-    @constraint(OC.model, q .<= ph.limits.ul.integral)
-    @constraint(OC.model, q .>= ph.limits.ll.integral)
+    ph.quadrature_constraints_upper = @constraint(OC.model, q .<= ph.limits.ul.integral)
+    ph.quadrature_constraints_lower = @constraint(OC.model, q .>= ph.limits.ll.integral)
 end
 
 function add_path_constraints(ph::PH, OC::OCP)
     for i = 1:ph.n
-        @constraint(OC.model, ph.pathfun(ph.x[:,i], ph.u[:,i], ph.t[i], ph.p) .<= ph.limits.ul.path)
-        @constraint(OC.model, ph.pathfun(ph.x[:,i], ph.u[:,i], ph.t[i], ph.p) .>= ph.limits.ll.path)
+        ph.path_constraints_upper[i] = @constraint(OC.model, ph.pathfun(ph.x[:,i], ph.u[:,i], ph.t[i], ph.p) .<= ph.limits.ul.path)
+        ph.path_constraints_lower[i] = @constraint(OC.model, ph.pathfun(ph.x[:,i], ph.u[:,i], ph.t[i], ph.p) .>= ph.limits.ll.path)
     end
 end
 
@@ -157,11 +160,13 @@ function setup_mpocp(OC::OCP)
         @objective(OC.model, Min, OC.obj)
     end
 
+    OC.event_constraints_lower = Vector{ConstraintRef}(undef, OC.npsi)
+    OC.event_constraints_upper = Vector{ConstraintRef}(undef, OC.npsi)
     if OC.npsi > 0
             psi = OC.psi(OC)
         for i in 1:OC.npsi 
-            @constraint(OC.model, psi[i] >= OC.psi_llim[i])
-            @constraint(OC.model, psi[i] <= OC.psi_ulim[i])
+            OC.event_constraints_lower[i] = @constraint(OC.model, psi[i] >= OC.psi_llim[i])
+            OC.event_constraints_upper[i] = @constraint(OC.model, psi[i] <= OC.psi_ulim[i])
         end
     end
 

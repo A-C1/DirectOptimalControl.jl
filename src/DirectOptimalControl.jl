@@ -1,11 +1,8 @@
 module DirectOptimalControl
 
 using JuMP
-import Ipopt
-using GLMakie
 using BSplineKit
 using QuadGK
-using Infiltrator
 
 # Code for h-methods
 include("hmethods/types.jl")

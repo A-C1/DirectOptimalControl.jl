@@ -1,9 +1,7 @@
-include("../src/DirectOptimalControl.jl")
-import .DirectOptimalControl as DOC
-
+import DirectOptimalControl as DOC
+using JuMP
 import Ipopt
 using GLMakie
-using JuMP
 
 # Set solver configuration
 OC = DOC.OCP()
@@ -34,7 +32,7 @@ p = (g0 = g0, hc = hc, c = c, Dc = Dc, xh0 = h0, utmax = utmax, x0 = x0)
 
 ns = 3
 nu = 1
-n = 20
+n = 50
 
 # System dynamics
 D(xh, xv, p) = p.Dc*(xv^2)*exp(-p.hc*(xh - p.xh0)/p.xh0)
@@ -70,6 +68,7 @@ ph.phi = phi
 ph.dyn = dyn
 ph.integralfun = integralfun
 ph.collocation_method = "hermite-simpson"
+ph.scale_flag = false
 
 ph.n = n
 ph.ns = ns
@@ -134,20 +133,21 @@ OC.psi = psi
 # Call function to setup the JuMP model for solving optimal control problem
 DOC.setup_mpocp(OC)
 # Solve for the control and state
+# DOC.solve_mpocp(OC)
 DOC.solve(OC)
-# DOC.solve(OC)
 solution_summary(OC.model)
 
 # Display results
 println("Objective Value: ", objective_value(OC.model))
 
-# x, u, dt, oc = NOC.solve(OC)
-
-f1, ax1, l1 = lines(value.(ph.t), value.(ph.x[1,:]))
-f2, ax2, l2 = lines(value.(ph.t), value.(ph.x[2,:]))
-f3, ax3, l3 = lines(value.(ph.t), value.(ph.x[3,:]))
-f4, ax4, l4 = lines(value.(ph.t), value.(ph.u[1,:]))
-display(f1)
-display(f2)
-display(f3)
+f = Figure() 
+ax1 = Axis(f[1,1])
+lines!(ax1, value.(ph.t), value.(ph.x[1,:]))
+ax2 = Axis(f[2,1])
+lines!(ax2, value.(ph.t), value.(ph.x[2,:]))
+ax3 = Axis(f[1, 2])
+lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
+ax4 = Axis(f[2, 2])
+lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
+display(f)
 
