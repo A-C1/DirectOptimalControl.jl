@@ -5,7 +5,7 @@ import DirectOptimalControl as DOC
 using Literate
 
 
-Literate.markdown("../tutorials/rocket.jl", "src/", flavor = Literate.CommonMarkFlavor())
+# Literate.markdown("../tutorials/rocket.jl", "src/", flavor = Literate.CommonMarkFlavor())
 # Literate.markdown("src/README.jl", "src/manual/", documenter = true)
 pages = [
     "Introduction" => "README.md"
