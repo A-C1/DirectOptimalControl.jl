@@ -34,6 +34,7 @@ function add_phase(ph::PH, OC::OCP)
         ph.ks = @variable(model, [1:nk],base_name = "ks")
     end
 
+    # Create unscaled version of variables
     unscaled_vars!(ph)
     ph.xi = @view ph.x[:,1]
     ph.xf = @view ph.x[:,end]

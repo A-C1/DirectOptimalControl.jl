@@ -43,7 +43,9 @@ function hermite_simpson(ph::PH, model::Model)
 end
 
 """
-trapezoidal(ph, Model)
+    trapezoidal(ph, model)
+
+Adds trapezoidal collocation to model.
 """
 function trapezoidal(ph::PH, model::Model)
     (;dyn, n, ns, nu, p, x, u, t, h) = ph
