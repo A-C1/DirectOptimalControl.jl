@@ -2,13 +2,14 @@ push!(LOAD_PATH, "../src/")
 
 using Documenter
 import DirectOptimalControl as DOC
-# using Literate
+using Literate
 
 
-# Literate.markdown("src/tutorials/rocket.jl", "src/manual/", documenter = true)
+Literate.markdown("../tutorials/rocket.jl", "src/", flavor = Literate.CommonMarkFlavor())
 # Literate.markdown("src/README.jl", "src/manual/", documenter = true)
 pages = [
     "Introduction" => "README.md"
+    "Rocket Control" => "rocket.md"
 ]
 makedocs(sitename = "Direct Optimal Control", 
          pages=pages,
@@ -16,5 +17,5 @@ makedocs(sitename = "Direct Optimal Control",
          )
 
 deploydocs(
-            repo = "https://github.com/A-C1/DirectOptimalControl.jl"
+            repo = "https://github.com/A-C1/DirectOptimalControl.jl.git"
         )
