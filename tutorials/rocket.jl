@@ -60,8 +60,8 @@ OC.objective_sense = "Max"
 # initially keep the solver tolerance higher so that the optimizer converges.
 set_optimizer(OC.model, Ipopt.Optimizer)
 set_attribute(OC.model, "print_level", 0)
-set_attribute(OC.model, "max_iter", 500)
-set_attribute(OC.model, "tol", 1e-4)
+# set_attribute(OC.model, "max_iter", 500)
+# set_attribute(OC.model, "tol", 1e-4)
 
 
 # # Define the models and cost functions
@@ -83,7 +83,7 @@ p = (g0 = g0, hc = hc, c = c, Dc = Dc, xh0 = h0, utmax = utmax, x0 = x0)
 
 ns = 3
 nu = 1
-n = 50
+n = 1000
 
 # ### System dynamics
 # Note that the dyn function which defines the dynamics must be in a particular format.
@@ -183,8 +183,8 @@ ph.limits.ll.tf = 0.2   # Lower bounds on input. Vector of dimension `nu`
 ph.limits.ul.tf = 0.2   # Upper bounds on input. Vector of dimesion `ns`
 ph.limits.ll.dt = 0.0     # Lower bounds on input. Vector of dimension `nu`
 ph.limits.ul.dt = 0.2     # Upper bounds on input. Vector of dimesion `ns`
-# ph.limits.ll.k = [0.0, 0.0, 0.0] # Lower bounds on input. Vector of dimension `nu`
-# ph.limits.ul.k = [0.2, 0.2, 0.2] # Upper bounds on input. Vector of dimesion `ns`
+# ph.limits.ll.k = [] # Lower bounds on input. Vector of dimension `nu`
+# ph.limits.ul.k = [] # Upper bounds on input. Vector of dimesion `ns`
 # Add the boundary constraints
 
 # ### Set intial values
@@ -195,18 +195,18 @@ ph.xinit = ones(ph.ns, ph.n)
 ph.uinit = ones(ph.nu, ph.n)
 ph.tfinit = ph.limits.ll.tf
 ph.tiinit = ph.limits.ll.ti
-ph.kinit  = (ph.limits.ll.k + ph.limits.ul.k)/2
+# ph.kinit  = (ph.limits.ll.k + ph.limits.ul.k)/2
 
 # Specify initial value
-OC.obj_llim = -2.0
-OC.obj_ulim = 2.0
+# OC.obj_llim = -2.0
+# OC.obj_ulim = 2.0
 OC.psi_llim = [0.0]
 OC.psi_ulim = [0.0]
 # OC.kg_llim = [0.0, 0.0, 0.0]
 # OC.kg_ulim = [1.0, 1.0, 1.0]
 
 
-OC.nkg = 2     #  Number of global parameters  Optional parameter
+OC.nkg = 0     #  Number of global parameters  Optional parameter
 OC.npsi = 1    # Optional parameter evnts
 function psi(ocp::DOC.OCP)
     (;ph) = ocp
@@ -223,8 +223,8 @@ OC.psi = psi
 # Call function to setup the JuMP model for solving optimal control problem
 DOC.setup_mpocp(OC)
 # Solve for the control and state
-# DOC.solve_mpocp(OC)
-DOC.solve(OC)
+DOC.solve_mpocp(OC)
+# DOC.solve(OC)
 solution_summary(OC.model)
 
 # Display results

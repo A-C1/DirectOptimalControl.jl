@@ -1,5 +1,5 @@
-include("../src/DirectOptimalControl.jl")
-import .DirectOptimalControl as DOC
+# include("../src/DirectOptimalControl.jl")
+import DirectOptimalControl as DOC
 
 import Ipopt
 using GLMakie
