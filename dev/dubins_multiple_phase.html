@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>setattribute(OC.model, &quot;maxiter&quot;, 500) · Direct Optimal Control</title><meta name="title" content="setattribute(OC.model, &quot;maxiter&quot;, 500) · Direct Optimal Control"/><meta property="og:title" content="setattribute(OC.model, &quot;maxiter&quot;, 500) · Direct Optimal Control"/><meta property="twitter:title" content="setattribute(OC.model, &quot;maxiter&quot;, 500) · Direct Optimal Control"/><meta name="description" content="Documentation for Direct Optimal Control."/><meta property="og:description" content="Documentation for Direct Optimal Control."/><meta property="twitter:description" content="Documentation for Direct Optimal Control."/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="README.html">Direct Optimal Control</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="README.html">Introduction</a></li><li><a class="tocitem" href="rocket.html">Rocket Control</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href="dubins_multiple_phase.html">set<em>attribute(OC.model, &quot;max</em>iter&quot;, 500)</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="dubins_multiple_phase.html">set<em>attribute(OC.model, &quot;max</em>iter&quot;, 500)</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/A-C1/DirectOptimalControl.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/A-C1/DirectOptimalControl.jl/blob/master/docs/src/dubins_multiple_phase.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><p>include(&quot;../src/DirectOptimalControl.jl&quot;)</p><pre><code class="language-julia hljs">import DirectOptimalControl as DOC
+
+import Ipopt
+using GLMakie
+using JuMP</code></pre><p>Common parameters</p><pre><code class="language-julia hljs">vm = 1.0   # Max forward speed
+um = 1.0   # Max turning speed
+ns = 3     # Number of states
+nu = 2     # Number of inputs
+n = 20    # Time steps</code></pre><p>x20 = [0, 0, -π / 2] x2f = [5.0, 5.0, π / 2 + π / 4] p2 = (xf=x2f, x0=x10, vm = vm, um = um, t0 = 0.0)</p><p>x30 = [0, 0, -π / 2] x3f = [5.0, 5.0, π / 2 + π / 4] p3 = (xf=x3f, x0=x10, vm = vm, um = um, t0 = 0.0) x40 = [0, 0, -π / 2] x4f = [5.0, 5.0, π / 2 + π / 4] p4 = (xf=x4f, x0=x10, vm = vm, um = um, t0 = 0.0) xf = [-5.0, 0.0, 0.0]</p><p>System dynamics</p><pre><code class="language-julia hljs">function dyn(x, u, t, p)</code></pre><p>vm = p.vm</p><pre><code class="language-julia hljs">    return [u[2] * cos(x[3]), u[2] * sin(x[3]), u[1]]
+end</code></pre><p>Objective Function Running cost</p><pre><code class="language-julia hljs">function L(x, u, t, p)
+    return 1.0
+end
+
+function phi(xf, uf, tf, p)
+    return 0.0
+end
+
+function integralfun(x, u, t, p)
+    return nothing
+end
+
+function pathfun(x, u, t, p)
+    return nothing
+end
+
+OC = DOC.OCP()
+OC.tol = 1e-5
+OC.mesh_iter_max = 15
+OC.objective_sense = &quot;Min&quot;
+set_optimizer(OC.model, Ipopt.Optimizer)
+set_attribute(OC.model, &quot;linear_solver&quot;, &quot;mumps&quot;)</code></pre><p>set<em>attribute(OC.model, &quot;print</em>level&quot;, 0)</p><h1 id="set*attribute(OC.model,-&quot;max*iter&quot;,-500)"><a class="docs-heading-anchor" href="#set*attribute(OC.model,-&quot;max*iter&quot;,-500)">set<em>attribute(OC.model, &quot;max</em>iter&quot;, 500)</a><a id="set*attribute(OC.model,-&quot;max*iter&quot;,-500)-1"></a><a class="docs-heading-anchor-permalink" href="#set*attribute(OC.model,-&quot;max*iter&quot;,-500)" title="Permalink"></a></h1><pre><code class="language-julia hljs">set_attribute(OC.model, &quot;tol&quot;, 1e-6)</code></pre><p>#–––––––––––––––––––––––––––</p><h1 id="Phase-1"><a class="docs-heading-anchor" href="#Phase-1">Phase 1</a><a id="Phase-1-1"></a><a class="docs-heading-anchor-permalink" href="#Phase-1" title="Permalink"></a></h1><pre><code class="language-julia hljs">ph1 = DOC.PH(OC)
+ph1.L = L
+ph1.phi = phi
+ph1.dyn = dyn
+ph1.integralfun = integralfun
+ph1.collocation_method = &quot;hermite-simpson&quot;
+ph1.scale_flag = false
+
+ph1.n = n
+ph1.ns = ns
+ph1.nu = nu
+ph1.nq = 0
+ph1.nk = 0</code></pre><h1 id="Auxillary-parameters"><a class="docs-heading-anchor" href="#Auxillary-parameters">Auxillary parameters</a><a id="Auxillary-parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Auxillary-parameters" title="Permalink"></a></h1><pre><code class="language-julia hljs">ph1.p = (k1 = 1.0, k2 = 2.0)
+
+ph1.limits.ll.u = [-1.0, 0.75*vm]
+ph1.limits.ul.u = [1.0, vm]
+ph1.limits.ll.x = [-10.0, -10.0, -10.0]
+ph1.limits.ul.x = [10.0, 10.0, 10.0]
+ph1.limits.ll.xf = [5.0, 5.0, π / 2 + π / 4]
+ph1.limits.ul.xf = [5.0, 5.0, π / 2 + π / 4]
+ph1.limits.ll.xi = [0, 0, -π / 2]
+ph1.limits.ul.xi = [0, 0, -π / 2]
+ph1.limits.ll.ti = 0.0
+ph1.limits.ul.ti = 0.0
+ph1.limits.ll.tf = 5.0
+ph1.limits.ul.tf = 20.0
+ph1.limits.ll.dt = 5.0
+ph1.limits.ul.dt = 20.0
+ph1.limits.ll.k = []
+ph1.limits.ul.k = []</code></pre><p>ph.set<em>initial</em>values can take two values: &quot;Auto&quot; and &quot;User&quot; Set initial values</p><pre><code class="language-julia hljs">ph1.set_initial_vals = &quot;Auto&quot;</code></pre><hr/><p>#–––––––––––––––––––––––––––</p><h1 id="Phase-2"><a class="docs-heading-anchor" href="#Phase-2">Phase 2</a><a id="Phase-2-1"></a><a class="docs-heading-anchor-permalink" href="#Phase-2" title="Permalink"></a></h1><pre><code class="language-julia hljs">ph2 = DOC.PH(OC)
+ph2.L = L
+ph2.phi = phi
+ph2.dyn = dyn
+ph2.integralfun = integralfun
+ph2.collocation_method = &quot;hermite-simpson&quot;
+ph2.scale_flag = false
+
+ph2.n = n
+ph2.ns = ns
+ph2.nu = nu
+ph2.nq = 0
+ph2.nk = 0
+
+ph2.p = (k1 = 1.0, k2 = 2.0)
+
+ph2.limits.ll.u = [-1.0, 0.75*vm]
+ph2.limits.ul.u = [1.0, vm]
+ph2.limits.ll.x = [-10.0, -10.0, -10.0]
+ph2.limits.ul.x = [10.0, 10.0, 10.0]
+ph2.limits.ll.xf =  [-5, 5, 0.0]
+ph2.limits.ul.xf =  [-5, 5, 0.0]
+ph2.limits.ll.xi = ph1.limits.ll.xf
+ph2.limits.ul.xi = ph1.limits.ul.xf
+ph2.limits.ll.ti = ph1.limits.ll.tf
+ph2.limits.ul.ti = ph1.limits.ul.tf
+ph2.limits.ll.dt = 5.0
+ph2.limits.ul.dt = 20.0
+ph2.limits.ll.tf = ph2.limits.ll.ti + ph2.limits.ll.dt
+ph2.limits.ul.tf = ph2.limits.ul.ti + ph2.limits.ul.dt</code></pre><p>Phase 3</p><pre><code class="language-julia hljs">ph3 = DOC.PH(OC)
+ph3.L = L
+ph3.phi = phi
+ph3.dyn = dyn
+ph3.integralfun = integralfun
+
+ph3.n = n
+ph3.tau = range(start = 0, stop = 1, length = ph3.n)
+ph3.ns = ns
+ph3.nu = nu
+ph3.p = (k1 = 1.0, k2 = 2.0)
+
+ph3.limits.ll.u = [-1.0, 0.75*vm]
+ph3.limits.ul.u = [1.0, vm]
+ph3.limits.ll.x = [-10.0, -10.0, -10.0]
+ph3.limits.ul.x = [10.0, 10.0, 10.0]
+ph3.limits.ll.xf =  [-5, -5, 0.0]
+ph3.limits.ul.xf =  [-5, -5, 0.0]
+ph3.limits.ll.xi = ph2.limits.ll.xf
+ph3.limits.ul.xi = ph2.limits.ul.xf
+ph3.limits.ll.ti = ph2.limits.ll.tf
+ph3.limits.ul.ti = ph2.limits.ul.tf
+ph3.limits.ll.dt = 7.0
+ph3.limits.ul.dt = 20.0
+ph3.limits.ll.tf = ph3.limits.ll.ti + ph3.limits.ll.dt
+ph3.limits.ul.tf = ph3.limits.ul.ti + ph3.limits.ul.dt
+ph3.collocation_method = &quot;hermite-simpson&quot;
+ph3.scale_flag = false</code></pre><p>Phase 4</p><pre><code class="language-julia hljs">ph4 = DOC.PH(OC)
+ph4.L = L
+ph4.phi = phi
+ph4.dyn = dyn
+ph4.integralfun = integralfun
+
+ph4.n = n
+ph4.tau = range(start = 0, stop = 1, length = ph4.n)
+ph4.ns = ns
+ph4.nu = nu
+ph4.p = (k1 = 1.0, k2 = 2.0)
+
+ph4.limits.ll.u = [-1.0, 0.75*vm]
+ph4.limits.ul.u = [1.0, vm]
+ph4.limits.ll.x = [-10.0, -10.0, -10.0]
+ph4.limits.ul.x = [10.0, 10.0, 10.0]
+ph4.limits.ll.xf =  ph1.limits.ll.xi
+ph4.limits.ul.xf =  ph1.limits.ul.xi
+ph4.limits.ll.xi = ph3.limits.ll.xf
+ph4.limits.ul.xi = ph3.limits.ul.xf
+ph4.limits.ll.ti = ph3.limits.ll.tf
+ph4.limits.ul.ti = ph3.limits.ul.tf
+ph4.limits.ll.dt = 7.0
+ph4.limits.ul.dt = 20.0
+ph4.limits.ll.tf = ph4.limits.ll.ti + ph4.limits.ll.dt
+ph4.limits.ul.tf = ph4.limits.ul.ti + ph4.limits.ul.dt
+ph4.collocation_method = &quot;hermite-simpson&quot;
+ph4.scale_flag = false</code></pre><p>Add the boundary constraints</p><pre><code class="language-julia hljs">function psi(ocp::DOC.OCP)
+    (;ph) = ocp</code></pre><h1 id="Phase-1-2"><a class="docs-heading-anchor" href="#Phase-1-2">Phase 1</a><a class="docs-heading-anchor-permalink" href="#Phase-1-2" title="Permalink"></a></h1><p>v1 = ph[1].ti - 0.0 v2 = ph[1].xf - ph[1].p.xfref v3 = ph[1].xi - ph[1].p.x0</p><h1 id="Phase-2-2"><a class="docs-heading-anchor" href="#Phase-2-2">Phase 2</a><a class="docs-heading-anchor-permalink" href="#Phase-2-2" title="Permalink"></a></h1><pre><code class="language-julia hljs">    v4 = ph[2].ti - ph[1].tf</code></pre><p>v5 = ph[2].xi - ph[1].xf v6 = ph[2].xf - [-5, 5, 0.0]</p><h1 id="Phase-3"><a class="docs-heading-anchor" href="#Phase-3">Phase 3</a><a id="Phase-3-1"></a><a class="docs-heading-anchor-permalink" href="#Phase-3" title="Permalink"></a></h1><pre><code class="language-julia hljs">    v7 = ph[3].ti - ph[2].tf</code></pre><p>v8 = ph[3].xi - ph[2].xf v9 = ph[3].xf - [-5, -5, 0.0]</p><h1 id="Phase-4"><a class="docs-heading-anchor" href="#Phase-4">Phase 4</a><a id="Phase-4-1"></a><a class="docs-heading-anchor-permalink" href="#Phase-4" title="Permalink"></a></h1><pre><code class="language-julia hljs">    v10 = ph[4].ti - ph[3].tf</code></pre><p>v11 = ph[4].xi - ph[3].xf v12 = ph[4].xf - ph[4].p.x0</p><p>return [v1; v2; v3; v4; v5; v6; v7; v8; v9; v10; v11; v12]#; v13; v14; v15]</p><pre><code class="language-julia hljs">    return [v4, v7, v10]
+end
+
+OC.psi = psi
+OC.npsi = 3
+OC.set_obj_lim = true
+OC.obj_llim = 0.0
+OC.obj_ulim = 43
+OC.psi_llim = [0.0, 0.0, 0.0]
+OC.psi_ulim = [0.0, 0.0, 0.0]
+DOC.setup_mpocp(OC)
+DOC.solve_mpocp(OC)</code></pre><p>Solve for the control and state</p><pre><code class="language-julia hljs">solution_summary(OC.model)</code></pre><p>Display results</p><pre><code class="language-julia hljs">println(&quot;Min time: &quot;, objective_value(OC.model))</code></pre><p>x, u, dt, oc = NOC.solve(OC)</p><pre><code class="language-julia hljs">f1, ax1, l1 = lines(value.(ph1.x[1, :]), value.(ph1.x[2, :]))
+l2 = lines!(ax1, value.(ph2.x[1, :]), value.(ph2.x[2, :]))
+l3 = lines!(ax1, value.(ph3.x[1, :]), value.(ph3.x[2, :]))
+l4 = lines!(ax1, value.(ph4.x[1, :]), value.(ph4.x[2, :]))
+ax1.autolimitaspect = 1.0</code></pre><p>f1</p><pre><code class="language-julia hljs">f2, ax2, l21 = lines(value.(ph1.t), value.(ph1.u[1, :]))
+l22 = lines!(ax2, value.(ph2.t), value.(ph2.u[1, :]))
+l23 = lines!(ax2, value.(ph3.t), value.(ph3.u[1, :]))
+l24 = lines!(ax2, value.(ph4.t), value.(ph4.u[1, :]))
+f2
+
+f3, ax3, l31 = lines(value.(ph1.t), value.(ph1.u[2, :]))
+l32 = lines!(ax3, value.(ph2.t), value.(ph2.u[2, :]))
+l33 = lines!(ax3, value.(ph3.t), value.(ph3.u[2, :]))
+l34 = lines!(ax3, value.(ph4.t), value.(ph4.u[2, :]))
+f3
+
+
+f4, ax4, l4 = lines(value.(ph1.xinit[1, :]), value.(ph1.xinit[2, :]))
+l2 = lines!(ax4, value.(ph2.xinit[1, :]), value.(ph2.xinit[2, :]))
+l3 = lines!(ax4, value.(ph3.xinit[1, :]), value.(ph3.xinit[2, :]))
+l4 = lines!(ax4, value.(ph4.xinit[1, :]), value.(ph4.xinit[2, :]))
+ax4.autolimitaspect = 1.0
+f4</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Monday 1 January 2024 14:39">Monday 1 January 2024</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

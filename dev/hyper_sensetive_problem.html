@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>c = NOC.add_phase(ph1, OC) · Direct Optimal Control</title><meta name="title" content="c = NOC.add_phase(ph1, OC) · Direct Optimal Control"/><meta property="og:title" content="c = NOC.add_phase(ph1, OC) · Direct Optimal Control"/><meta property="twitter:title" content="c = NOC.add_phase(ph1, OC) · Direct Optimal Control"/><meta name="description" content="Documentation for Direct Optimal Control."/><meta property="og:description" content="Documentation for Direct Optimal Control."/><meta property="twitter:description" content="Documentation for Direct Optimal Control."/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="README.html">Direct Optimal Control</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="README.html">Introduction</a></li><li><a class="tocitem" href="rocket.html">Rocket Control</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href="hyper_sensetive_problem.html">c = NOC.add_phase(ph1, OC)</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="hyper_sensetive_problem.html">c = NOC.add_phase(ph1, OC)</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/A-C1/DirectOptimalControl.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/A-C1/DirectOptimalControl.jl/blob/master/docs/src/hyper_sensetive_problem.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><pre><code class="language-julia hljs">include(&quot;../src/DirectOptimalControl.jl&quot;)
+import .DirectOptimalControl as DOC
+
+import Ipopt
+using GLMakie
+using JuMP
+
+
+OC = DOC.OCP()
+OC.tol = 1e-5
+OC.mesh_iter_max = 30
+OC.objective_sense = &quot;Min&quot;
+set_optimizer(OC.model, Ipopt.Optimizer)</code></pre><p>set<em>attribute(OC.model, &quot;max</em>iter&quot;, 500) set_attribute(OC.model, &quot;tol&quot;, 1e-3)</p><pre><code class="language-julia hljs">set_attribute(OC.model, &quot;print_level&quot;, 0)
+
+
+t0 = 0;
+tf = 10000;
+x0 = 1.5;
+xf = 1;
+xMin = -50;
+xMax = +50;
+uMin = -50;
+uMax = +50;
+
+ns = 1
+nu = 1
+n = 25</code></pre><p>System dynamics Function must always return a vector``</p><pre><code class="language-julia hljs">function dyn(x, u, t, p)
+    return [-x[1]^3 + u[1]]
+end</code></pre><p>Objective Function Running cost</p><pre><code class="language-julia hljs">function L(x, u, t, p)
+    return 0.5*(x[1]^2 + u[1]^2)
+end
+
+function phi(xf, uf, tf, p)
+    return xf[1]^2 + uf[1]^2
+end
+
+integralfun(x, u, t, p) = nothing</code></pre><p>Phase 1</p><pre><code class="language-julia hljs">ph = DOC.PH(OC)
+ph.L = L
+ph.phi = phi
+ph.dyn = dyn
+ph.integralfun = integralfun
+
+ph.n = n
+ph.ns = ns
+ph.nu = nu
+ph.p = (k1 = 1, k2 = 2)
+
+ph.limits.ll.u = [uMin]
+ph.limits.ul.u = [uMax]
+ph.limits.ll.x =[xMin]
+ph.limits.ul.x = [xMax]
+ph.limits.ll.xf = [xf]
+ph.limits.ul.xf = [xf]
+ph.limits.ll.xi = [x0]
+ph.limits.ul.xi = [x0]
+ph.limits.ll.ti = t0
+ph.limits.ul.ti = t0
+ph.limits.ll.tf = tf
+ph.limits.ul.tf = tf
+ph.limits.ll.dt = tf-t0
+ph.limits.ul.dt = tf-t0
+
+ph.collocation_method = &quot;hermite-simpson&quot;
+ph.set_initial_vals = &quot;Auto&quot;
+ph.scale_flag = true</code></pre><p>Add the boundary constraints</p><pre><code class="language-julia hljs">function psi(ocp::DOC.OCP)
+    (;ph) = ocp
+
+
+    return nothing
+end
+
+OC.psi = psi</code></pre><h1 id="c-NOC.add_phase(ph1,-OC)"><a class="docs-heading-anchor" href="#c-NOC.add_phase(ph1,-OC)">c = NOC.add_phase(ph1, OC)</a><a id="c-NOC.add_phase(ph1,-OC)-1"></a><a class="docs-heading-anchor-permalink" href="#c-NOC.add_phase(ph1,-OC)" title="Permalink"></a></h1><pre><code class="language-julia hljs">DOC.setup_mpocp(OC)
+DOC.solve_mpocp(OC)</code></pre><p>DOC.solve(OC) NOC.calcerrorphase(ph1) NOC.compute<em>new</em>mesh_betts(OC)</p><p>Solve for the control and state</p><pre><code class="language-julia hljs">solution_summary(OC.model)</code></pre><p>Display results</p><pre><code class="language-julia hljs">println(&quot;Min value: &quot;, objective_value(OC.model))</code></pre><p>x, u, dt, oc = NOC.solve(OC)</p><pre><code class="language-julia hljs">f1, ax1, l1 = lines(value.(ph.t), value.(ph.x[1,:]))
+f2, ax2, l2 = lines(value.(ph.t), value.(ph.u[1,:]))</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Monday 1 January 2024 14:39">Monday 1 January 2024</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
