@@ -1,8 +1,12 @@
-# Path and Integral Functions yet to be added
+"""
+VarVals0
+
+Struct which defines variables which have bounds
+"""
 mutable struct VarVals0
-    ti::Float64
-    tf::Float64
-    dt::Float64
+    ti::Float64             # Initial time
+    tf::Float64             # Final time
+    dt::Float64             # delta time
     xf::Vector{Float64}
     xi::Vector{Float64}
     x::Vector{Float64}
@@ -10,7 +14,6 @@ mutable struct VarVals0
     integral::Vector{Float64}
     path::Vector{Float64}
     k::Vector{Float64}
-
 
     function VarVals0()
         return new()

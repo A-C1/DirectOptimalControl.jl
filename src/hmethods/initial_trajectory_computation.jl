@@ -86,7 +86,7 @@ function auto_generate_init_values(ph::PH, OC::OCP)
     end
 
     # Compute initial x by interpolating linearly between initial and final values
-    dx = (ph.limits.ul.xf - ph.limits.ll.xi) / ph.n
+    dx = (ph.limits.ul.xf - ph.limits.ll.xi) / (ph.n-1)
     for i = 1:ph.n-1
         if OC.mesh_iter_no == 1
             ph.xinit[:, i+1] = ph.xinit[:, i] + dx

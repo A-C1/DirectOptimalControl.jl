@@ -1,41 +1,45 @@
 ## Overview
 
-Our goal is to maximize the final altitude of a vertically launched rocket.
+### Goddard's rocket Model
 
-We can control the thrust of the rocket, and must take account of the rocket
-mass, fuel consumption rate, gravity, and aerodynamic drag.
-
-Let us consider the basic description of the model (for the full description,
-including parameters for the rocket, see [COPS3](https://www.mcs.anl.gov/~more/cops/cops3.pdf)).
-
-There are three state variables in our model:
-
+State variables:
 * Velocity: $x_v(t)$
 * Altitude: $x_h(t)$
 * Mass of rocket and remaining fuel, $x_m(t)$
 
-and a single control variable:
-
+### Control variables
 * Thrust: $u_t(t)$.
 
-There are three equations that control the dynamics of the rocket:
-
+### Dynamics:
  * Rate of ascent: $$\frac{d x_h}{dt} = x_v$$
  * Acceleration: $$\frac{d x_v}{dt} = \frac{u_t - D(x_h, x_v)}{x_m} - g(x_h)$$
  * Rate of mass loss: $$\frac{d x_m}{dt} = -\frac{u_t}{c}$$
-
 where drag $D(x_h, x_v)$ is a function of altitude and velocity, gravity
 $g(x_h)$ is a function of altitude, and $c$ is a constant.
-
 These forces are defined as:
-
 $$D(x_h, x_v) = D_c \cdot x_v^2 \cdot e^{-h_c \left( \frac{x_h-x_h(0)}{x_h(0)} \right)}$$
-and
 $$g(x_h) = g_0 \cdot \left( \frac{x_h(0)}{x_h} \right)^2$$
 
-We use a discretized model of time, with a fixed number of time steps, $T$.
+### Outputs:
 
-Our goal is thus to maximize $x_h(T)$.
+### Objective:
+
+````julia
+Maximize $x_h(T)$.
+````
+
+### State Constraints:
+
+### Input Constraints:
+
+### Path Constrains:
+
+### Integral Constraints:
+
+## Start code
+Include the necessary packages. `JuMP` is required to setup various configurations
+while `Ipopt` is the solver to be used. Technically all other nonlinear solvers available
+throught JuMP can be used but those have not yet been tested.
 
 ````julia
 import DirectOptimalControl as DOC
@@ -53,7 +57,7 @@ OC = DOC.OCP()
 ````
 
 Now we will set various parameters for the solver
-* OC.tol : Sets up tolerence for the solver. In the intial run it is advisable to keep the tolerance height
+* OC.tol : Sets up tolerence for the solver. In the intial run it is advisable to keep the tolerance high.
 * OC.mesh_iter_max : This is the maximum number of iterations that the solver takes
 * OC.objective_sense: You can set two options here "Max" or "Min" depending on weather the objective is to be minimized or maximized
 
@@ -63,17 +67,24 @@ OC.mesh_iter_max = 10
 OC.objective_sense = "Max"
 ````
 
-Now it is time to select an optimizer. Let us select the Ipopt optimizer. The OC struct contains an JuMP model in its field
-OC.model. We can assign any non-linear optimizer that JuMP supports. For this reason we needed to import JuMP. It is advisable to
-initially keep the solver tolerance higher so that the optimizer converges.
+Now it is time to select an optimizer. Let us select the Ipopt optimizer. The OC struct contains an `JuMP` model in its field
+`OC.model`. We can assign any non-linear optimizer that `JuMP` supports. For this reason we needed to import `JuMP`. It is advisable to
+initially keep the solver tolerance higher so that the optimizer converges. You can set all the solver specific options using the
+`JuMP` interface to aid the convergence of the solver.
 
 ````julia
 set_optimizer(OC.model, Ipopt.Optimizer)
 set_attribute(OC.model, "print_level", 0)
+# set_attribute(OC.model, "max_iter", 500)
+# set_attribute(OC.model, "tol", 1e-4)
 ````
 
-set_attribute(OC.model, "max_iter", 500)
-set_attribute(OC.model, "tol", 1e-4)
+Each OCP must contain atleast one phase. The synatax for adding the phase
+to an OCP is given by
+
+````julia
+ph = DOC.PH(OC)
+````
 
 # Define the models and cost functions
 Now let us define the objectives and functions which make up the model
@@ -90,9 +101,17 @@ Dc = 0.5 * 620 * m0 / g0    # Drag scaling
 utmax = 3.5 * g0 * m0       # Maximum thrust
 Tmax = 0.2                  # Number of seconds
 
-x0 = [h0, v0, m0]
+x0 = [h0, v0, m0]           # Initial state
+````
 
-p = (g0 = g0, hc = hc, c = c, Dc = Dc, xh0 = h0, utmax = utmax, x0 = x0)
+#### Auxillary parameters
+Now we create a named tuple of various parameters which will be necessary while defining the problem
+Note that in addition to the constants defined above we also add two additional parameters `PH.kp` and
+`OC.kg`. These are additional `JuMP` variables which can be optimized if required. They will not
+be used in this example.
+
+````julia
+p = (g0 = g0, hc = hc, c = c, Dc = Dc, xh0 = h0, utmax = utmax, x0 = x0, kp = PH.kp, kg = PH.kg )
 
 ns = 3
 nu = 1
@@ -170,12 +189,6 @@ end
 ````
 
 # Assignement to Phase object
-Each OCP must contain atleast one phase. The synatax for adding the phase
-to an OCP is given by
-
-````julia
-ph = DOC.PH(OC)
-````
 
 Now let us assign the various functions defined above to the phase `ph` that we have
 just created
@@ -205,31 +218,40 @@ ph.scale_flag = true
 ````
 
 Now let us set the upper bounds and lower bounds on all the variables
-pathconstaints and integral constraints
+pathconstaints and integral constraints. The upper and lower bounds are defined in the limits
+field of the PH structure. The limits feild contains `ll` structure which corrsponds to lower limits.
+The `ul` corresponds to upper bounds. The `ll` and `ul structures` both contain the JuMP variables
+on which we wanrt to apply upper and lower bounds. These are:
+`u` : Input
+`x` : State
+`xf` : Final State
+`xi`: Initial State
+`tf`: Final State
+`ti`: Initial time
+If we want a particular variable to have a fixwd value set both the upper limits and the lower limits
+to the same value
 
 ````julia
 ph.limits.ll.u = [0.0]      # Lower bounds on input. Vector of dimension `nu`
-ph.limits.ul.u = [p.utmax]  # Upper bounds on input. Vector of dimesion `ns`
-ph.limits.ll.x = [0.0, 0.0, 0.0] # Lower bounds on input. Vector of dimension `nu`
-ph.limits.ul.x = [2.0, 2.0, 2.0] # Upper bounds on input. Vector of dimesion `ns`
-ph.limits.ll.xf = [0.3, 0, mT]      # Lower bounds on input. Vector of dimension `nu`
+ph.limits.ul.u = [p.utmax]  # Upper bounds on input. Vector of dimesion `nu`
+ph.limits.ll.x = [0.0, 0.0, 0.0] # Lower bounds on state trajectory. Vector of dimension `ns`
+ph.limits.ul.x = [2.0, 2.0, 2.0] # Upper bounds on state trajectory. Vector of dimesion `ns`
+ph.limits.ll.xf = [0.3, 0, mT]      # Lower bounds on final state. Vector of dimension `nu`
 ph.limits.ul.xf = [2.0, 2.0, 2.0]   # Upper bounds on input. Vector of dimesion `ns`
-ph.limits.ll.xi = p.x0  # Lower bounds on input. Vector of dimension `nu`
-ph.limits.ul.xi = p.x0  # Upper bounds on input. Vector of dimesion `ns`
-ph.limits.ll.ti = 0.0   # Lower bounds on input. Vector of dimension `nu`
-ph.limits.ul.ti = 0.0   # Upper bounds on input. Vector of dimesion `ns`
+ph.limits.ll.xi = p.x0  # Lower bounds on initial state. Vector of dimension `ns`
+ph.limits.ul.xi = p.x0  # Upper bounds on initial state. Vector of dimesion `ns`
+ph.limits.ll.ti = 0.0   # Lower bounds on initial time. A Scalar.
+ph.limits.ul.ti = 0.0   # Upper bounds on initial time. A Scalar
 ph.limits.ll.tf = 0.2   # Lower bounds on input. Vector of dimension `nu`
 ph.limits.ul.tf = 0.2   # Upper bounds on input. Vector of dimesion `ns`
 ph.limits.ll.dt = 0.0     # Lower bounds on input. Vector of dimension `nu`
 ph.limits.ul.dt = 0.2     # Upper bounds on input. Vector of dimesion `ns`
-````
-
 ph.limits.ll.k = [] # Lower bounds on input. Vector of dimension `nu`
 ph.limits.ul.k = [] # Upper bounds on input. Vector of dimesion `ns`
-Add the boundary constraints
+````
 
 ### Set intial values
-There are two options here "Auto" and "Manual"
+There are two options here "Auto" and "Manual". If "Auto" option is selected one need not specify tau and other init values
 
 ````julia
 ph.set_initial_vals = "Auto"
@@ -238,25 +260,52 @@ ph.xinit = ones(ph.ns, ph.n)
 ph.uinit = ones(ph.nu, ph.n)
 ph.tfinit = ph.limits.ll.tf
 ph.tiinit = ph.limits.ll.ti
+ph.kinit  = (ph.limits.ll.k + ph.limits.ul.k)/2
 ````
 
-ph.kinit  = (ph.limits.ll.k + ph.limits.ul.k)/2
-
-Specify initial value
-OC.obj_llim = -2.0
-OC.obj_ulim = 2.0
+## Specify global parameters
+This problem only contains a single phase. However, in problems with multiple phases there are
+parameters which are global to all the phases. We specify it here.
+### Set limits on objective function
+It has been observed that it is better to not set it as in keep the value false. However, an option is provided to set upper
+and lower values for the objective function
 
 ````julia
+OC.set_obj_lim = false
+OC.obj_llim = -2.0
+OC.obj_ulim = 2.0
+````
+
+## Setting up global parameters
+* OC.nkg: Number of global parameters
+* OC.kg_llim: Lower bound on global parameters
+* OC.kg_ulim: Upper bound on global parameters
+Note that these have to be passed to the function through the auxillary parameters tupple `p`
+
+````julia
+OC.nkg = 0
+OC.kg_llim = []
+OC.kg_ulim = []
+````
+
+## Setting up the event function
+*`OC.npsi`: Number of constraints in event function
+*`OC.psi_llim`: Lower bound on constraint function
+*`OC.psi_ulim`: Upper bound on constraint function
+*`OC.psi` : Function which contains the event constraints
+
+````julia
+OC.npsi = 1
 OC.psi_llim = [0.0]
 OC.psi_ulim = [0.0]
 ````
 
-OC.kg_llim = [0.0, 0.0, 0.0]
-OC.kg_ulim = [1.0, 1.0, 1.0]
+Not the format of he event function `psi`. It takes the OCP object as input.
+The OCP object has all the phases stored in it in the field `OC.ph`.
+Each phase has state variables which can be accessed by `ph.x` and input
+variable which can be accessed by `ph.u`.
 
 ````julia
-OC.nkg = 0     #  Number of global parameters  Optional parameter
-OC.npsi = 1    # Optional parameter evnts
 function psi(ocp::DOC.OCP)
     (;ph) = ocp
 
@@ -269,7 +318,6 @@ return nothing
 
 ````julia
 end
-
 OC.psi = psi
 ````
 

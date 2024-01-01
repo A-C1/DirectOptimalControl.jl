@@ -1,21 +1,3 @@
-function Base.convert(
-    ::Type{<:GenericNonlinearExpr},
-    x::GenericAffExpr{C,V},
-) where {C,V}
-    args = Any[]
-    for (variable, coef) in x.terms
-        if isone(coef)
-            push!(args, variable)
-        elseif !iszero(coef)
-            push!(args, GenericNonlinearExpr{V}(:*, coef, variable))
-        end
-    end
-    if !iszero(x.constant) || isempty(args)
-        push!(args, x.constant)
-    end
-    return GenericNonlinearExpr{V}(:+, args)
-end
-
 function scaled_to_unscaled(xs, xu, xl, scale_flag)
     if scale_flag == true
         m = xu - xl

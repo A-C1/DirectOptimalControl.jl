@@ -1,3 +1,4 @@
+````julia
 include("../src/DirectOptimalControl.jl")
 import .DirectOptimalControl as NOC
 
@@ -11,10 +12,12 @@ OC.tol = 1e-4
 OC.mesh_iter_max = 5
 OC.min = false
 set_optimizer(OC.model, Ipopt.Optimizer)
-# set_attribute(OC.model, "max_iter", 500)
-# set_attribute(OC.model, "tol", 1e-4)
+````
 
+set_attribute(OC.model, "max_iter", 500)
+set_attribute(OC.model, "tol", 1e-4)
 
+````julia
 h0 = 1                      # Initial height
 v0 = 0                      # Initial velocity
 m0 = 1.0                    # Initial mass
@@ -33,25 +36,31 @@ p = (g0 = g0, hc = hc, c = c, Dc = Dc, xh0 = h0, utmax = utmax, x0 = x0)
 ns = 3
 nu = 1
 n = 1000
+````
 
-# System dynamics
+System dynamics
+
+````julia
 D(xh, xv, p) = p.Dc*(xv^2)*exp(-p.hc*(xh - p.xh0)/p.xh0)
 g(xh, p) = p.g0*(p.xh0/xh)^2
 function dyn(x, u, t, p)
     h = x[1]
     phi = x[2]
-    h1 = 
-    phi2 = 
-    theta3 = 
-    v4 = 
+    h1 =
+    phi2 =
+    theta3 =
+    v4 =
     gamma5 =
     psi6 =
 
     return [h1, phi2, theta3, v4, gamma4, psi6]
 end
+````
 
-# Objective Function
-# Running cost
+Objective Function
+Running cost
+
+````julia
 function L(x, u, t, p)
     return 0.0
 end
@@ -59,11 +68,11 @@ end
 function phi(xf, uf, tf, p)
     return xf[1]
 end
+````
 
+Phase 1
 
-
-#------------------------------------------------------
-# Phase 1
+````julia
 ph1 = NOC.PH(OC)
 ph1.L = L
 ph1.phi = phi
@@ -89,12 +98,18 @@ ph1.limits.ll.tf = 0.2
 ph1.limits.ul.tf = 0.2
 ph1.limits.ll.dt = 0.0
 ph1.limits.ul.dt = 0.2
+````
 
-# Add the boundary constraints
+Add the boundary constraints
+
+````julia
 function psi(ocp::NOC.OCP)
     (;ph) = ocp
+````
 
-    # Phase 1
+Phase 1
+
+````julia
     v1 = ph[1].ti - 0.0
     v2 = ph[1].u[:, end]
     v3 = ph[1].xi - ph[1].p.x0
@@ -102,20 +117,37 @@ function psi(ocp::NOC.OCP)
 
 
     return [v2;]
-    # return nothing
+````
+
+return nothing
+
+````julia
 end
 
 OC.psi = psi
-# c = NOC.add_phase(ph1, OC)
+````
+
+c = NOC.add_phase(ph1, OC)
+
+````julia
 NOC.solve(OC)
-# Solve for the control and state
+````
+
+Solve for the control and state
+
+````julia
 solution_summary(OC.model)
+````
 
-# Display results
+Display results
+
+````julia
 println("Min time: ", objective_value(OC.model))
+````
 
-# x, u, dt, oc = NOC.solve(OC)
+x, u, dt, oc = NOC.solve(OC)
 
+````julia
 f1, ax1, l1 = lines(value.(ph1.t), value.(ph1.x[1,:]))
 f2, ax2, l2 = lines(value.(ph1.t), value.(ph1.x[2,:]))
 f3, ax3, l3 = lines(value.(ph1.t), value.(ph1.x[3,:]))
@@ -123,4 +155,9 @@ f4, ax4, l4 = lines(value.(ph1.t), value.(ph1.u[1,:]))
 display(f1)
 display(f2)
 display(f3)
+````
+
+---
+
+*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
 
