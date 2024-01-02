@@ -11,9 +11,9 @@ pages = [
     "Rocket Control" => "rocket.md",
     "Alp Rider" => "alprider.md",
     "Dubins multiple phase" => "dubins_multiple_phase.md",
-    "Hyper sensetive problem" => "hyper_sensetive_problem.md"
-    "Space craft" => "spacecraft.md"
-    "Tumor antiogenesis" => "tumor_antiogenesis.md"
+    "Hyper sensetive problem" => "hyper_sensetive_problem.md",
+    "Space craft" => "spacecraft.md",
+    "Tumor antiogenesis" => "tumor_antiogenesis.md",
 ]
 
 makedocs(sitename = "Direct Optimal Control", 
