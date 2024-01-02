@@ -223,7 +223,6 @@ function pathfun(x, u, t, p)
     v = x[4]; rad = x[1];
     aoa = u[1]; bank = u[2]
 
-    p.
     return nothing
 end
 
