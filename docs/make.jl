@@ -6,9 +6,16 @@ using Literate
 
 
 pages = [
-    "Introduction" => "README.md"
-    "Rocket Control" => "rocket.md"
+    "Home" => "index.md",
+    "Introduction" => "README.md",
+    "Rocket Control" => "rocket.md",
+    "Alp Rider" => "alprider.md",
+    "Dubins multiple phase" => "dubins_multiple_phase.md",
+    "Hyper sensetive problem" => "hyper_sensetive_problem.md"
+    "Space craft" => "spacecraft.md"
+    "Tumor antiogenesis" => "tumor_antiogenesis.md"
 ]
+
 makedocs(sitename = "Direct Optimal Control", 
          pages=pages,
          format = Documenter.HTML(prettyurls = false)
