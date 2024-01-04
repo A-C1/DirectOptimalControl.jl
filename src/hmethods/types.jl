@@ -130,6 +130,10 @@ mutable struct PH0
     set_initial_vals::String 
     scale_flag::Bool
 
+    # Callback function and data
+    callback_fun::Function
+    callback_nt::NamedTuple
+
     function PH0()
         ph = new()
         ph.limits = Limits0()

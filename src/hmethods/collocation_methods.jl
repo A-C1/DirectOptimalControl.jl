@@ -53,7 +53,7 @@ function trapezoidal(ph::PH, model::Model)
         f1 = dyn(x[1:ns, j], u[1:nu, j], t[j], p)
         f2 = dyn(x[1:ns, j+1], u[1:nu, j+1], t[j+1], p)
 
-        @constraint(model, x[1:ns, j+1] == x[1:ns, j] + h[j] * (f1 + f2) / 2)
+        ph.collocation_constraints[j] = @constraint(model, x[1:ns, j+1] .== x[1:ns, j] + h[j] * (f1 + f2) / 2)
     end
 end
 
