@@ -260,6 +260,7 @@ function solve(OC::OCP)
             error = Float64[]
             for ph in OC.ph
                 calcerrorphase_split(ph)
+                ph.callback_fun(ph)
                 compute_new_mesh_betts(ph, OC)
                 append!(error, ph.error)
             end

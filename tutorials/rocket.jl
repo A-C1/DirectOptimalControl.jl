@@ -100,7 +100,7 @@ p = (g0 = g0, hc = hc, c = c, Dc = Dc, xh0 = h0, utmax = utmax, x0 = x0, kp = ph
 
 ns = 3
 nu = 1
-n = 1000
+n = 20
 
 # #### System dynamics
 # Note that the dyn function which defines the dynamics must be in a particular format.
@@ -258,12 +258,21 @@ function psi(ocp::DOC.OCP)
 end
 OC.psi = psi
 
+# Callback function can be used to log variables
+# Set it to return nothing if you do not want to log variables in mesh iterations
+ph.callback_nt = (tau_hist = Vector{Float64}[],err_hist = Vector{Float64}[])
+function callback_fun(ph::DOC.PH)
+    push!(ph.callback_nt.tau_hist, deepcopy(ph.tau))
+    push!(ph.callback_nt.err_hist, deepcopy(ph.error))
+end
+ph.callback_fun = callback_fun
+
 
 # Call function to setup the JuMP model for solving optimal control problem
 DOC.setup_mpocp(OC)
 # Solve for the control and state
-DOC.solve_mpocp(OC)
-# DOC.solve(OC)
+# DOC.solve_mpocp(OC)
+DOC.solve(OC)
 solution_summary(OC.model)
 
 # Display results
@@ -280,3 +289,21 @@ ax4 = Axis(f[2, 2])
 lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
 display(f)
 
+fth = Figure()
+axth = Axis(fth[1,1])
+n = length(ph.callback_nt.tau_hist)
+for i = 1:n
+    ni = length(ph.callback_nt.tau_hist[i])
+    tau = ph.callback_nt.tau_hist[i]
+    scatter!(axth,tau,i*ones(ni))
+end
+
+feh = Figure()
+axeh = Axis(feh[1,1])
+n = length(ph.callback_nt.err_hist)
+for i = 3:n
+    ni = length(ph.callback_nt.err_hist[i])
+    err = ph.callback_nt.err_hist[i]
+    tau = ph.callback_nt.tau_hist[i]
+    lines!(axeh,tau[1:end-1],err)
+end
