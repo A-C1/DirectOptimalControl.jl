@@ -101,7 +101,6 @@ function add_var_constraints(ph::PH, OC::OCP)
 
     @constraint(model, ph.tf <= ph.limits.ul.tf)
     @constraint(model, ph.tf >= ph.limits.ll.tf)
-    # @constraint(model, ph.limits.ll.tf <= ph.tf <= ph.limits.ul.tf)
     @constraint(model, ph.ti <= ph.limits.ul.ti)
     @constraint(model, ph.ti >= ph.limits.ll.ti)
     @constraint(model, ph.Δt <= ph.limits.ul.dt)

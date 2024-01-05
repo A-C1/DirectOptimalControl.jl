@@ -36,7 +36,7 @@ end
 
 
 
-mutable struct PH0
+mutable struct PH1
     id::Int64
     # Optimal control functions
     L::Function
@@ -130,7 +130,11 @@ mutable struct PH0
     set_initial_vals::String 
     scale_flag::Bool
 
-    function PH0()
+    # Callback function and data
+    callback_fun::Function
+    callback_nt::NamedTuple
+
+    function PH1()
         ph = new()
         ph.limits = Limits0()
 
@@ -152,8 +156,8 @@ mutable struct PH0
 end
 
 
-mutable struct OCP0
-    ph::Vector{PH0}
+mutable struct OCP1
+    ph::Vector{PH1}
     model::Model
     psi::Function
 
@@ -163,10 +167,6 @@ mutable struct OCP0
     infeasible_iter_no::Int64
     infeasible_iter_max::Int64
     solver_status::MOI.TerminationStatusCode
-
-    # Remove these: maybe later
-    # objmax::Float64
-    # objmin::Float64
 
     # Variable for global parameters to be optimized
     kg::Vector{VariableRef}
@@ -192,10 +192,10 @@ mutable struct OCP0
     event_constraints_upper::Vector{ConstraintRef}
     event_constraints_lower::Vector{ConstraintRef}
 
-    function OCP0()
+    function OCP1()
         x = new()
         x.model = Model()
-        x.ph = PH[]
+        x.ph = PH1[]
         x.mesh_iter_no = 1
         x.mesh_iter_max = 5
         x.infeasible_iter_no = 1
@@ -209,8 +209,8 @@ mutable struct OCP0
     end
 end
 
-function PH0(ocp::OCP0)
-    ph = PH0()
+function PH1(ocp::OCP1)
+    ph = PH1()
     ph.id = length(ocp.ph) + 1
     push!(ocp.ph, ph)
 
@@ -219,5 +219,5 @@ end
 
 Limits = Limits0
 VarVals = VarVals0
-PH = PH0
-OCP = OCP0
+PH = PH1
+OCP = OCP1
