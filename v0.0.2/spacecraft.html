@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Space craft · Direct Optimal Control</title><meta name="title" content="Space craft · Direct Optimal Control"/><meta property="og:title" content="Space craft · Direct Optimal Control"/><meta property="twitter:title" content="Space craft · Direct Optimal Control"/><meta name="description" content="Documentation for Direct Optimal Control."/><meta property="og:description" content="Documentation for Direct Optimal Control."/><meta property="twitter:description" content="Documentation for Direct Optimal Control."/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="README.html">Direct Optimal Control</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="README.html">Introduction</a></li><li><a class="tocitem" href="rocket.html">Rocket Control</a></li><li><a class="tocitem" href="alprider.html">Alp Rider</a></li><li><a class="tocitem" href="dubins_multiple_phase.html">Dubins multiple phase</a></li><li><a class="tocitem" href="dubins_interception.html">Dubins Interception</a></li><li><a class="tocitem" href="hyper_sensetive_problem.html">Hyper sensetive problem</a></li><li class="is-active"><a class="tocitem" href="spacecraft.html">Space craft</a></li><li><a class="tocitem" href="tumor_antiogenesis.html">Tumor antiogenesis</a></li><li><a class="tocitem" href="van_der_pol_oscillator.html">Van Der Pol Oscillator</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href="spacecraft.html">Space craft</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="spacecraft.html">Space craft</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/A-C1/DirectOptimalControl.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/A-C1/DirectOptimalControl.jl/blob/master/docs/src/spacecraft.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><pre><code class="language-julia hljs">include(&quot;../src/DirectOptimalControl.jl&quot;)
+import .DirectOptimalControl as NOC
+
+import Ipopt
+using GLMakie
+using JuMP
+
+
+OC = NOC.OCP()
+OC.tol = 1e-4
+OC.mesh_iter_max = 5
+OC.min = false
+set_optimizer(OC.model, Ipopt.Optimizer)</code></pre><p>set<em>attribute(OC.model, &quot;max</em>iter&quot;, 500) set_attribute(OC.model, &quot;tol&quot;, 1e-4)</p><pre><code class="language-julia hljs">h0 = 1                      # Initial height
+v0 = 0                      # Initial velocity
+m0 = 1.0                    # Initial mass
+mT = 0.6                    # Final mass
+g0 = 1                      # Gravity at the surface
+hc = 500                    # Used for drag
+c = 0.5 * sqrt(g0 * h0)    # Thrust-to-fuel mass
+Dc = 0.5 * 620 * m0 / g0  # Drag scaling
+utmax = 3.5 * g0 * m0    # Maximum thrust
+Tmax = 0.2                  # Number of seconds
+
+x0 = [h0, v0, m0]
+
+p = (g0 = g0, hc = hc, c = c, Dc = Dc, xh0 = h0, utmax = utmax, x0 = x0)
+
+ns = 3
+nu = 1
+n = 1000</code></pre><p>System dynamics</p><pre><code class="language-julia hljs">D(xh, xv, p) = p.Dc*(xv^2)*exp(-p.hc*(xh - p.xh0)/p.xh0)
+g(xh, p) = p.g0*(p.xh0/xh)^2
+function dyn(x, u, t, p)
+    h = x[1]
+    phi = x[2]
+    h1 =
+    phi2 =
+    theta3 =
+    v4 =
+    gamma5 =
+    psi6 =
+
+    return [h1, phi2, theta3, v4, gamma4, psi6]
+end</code></pre><p>Objective Function Running cost</p><pre><code class="language-julia hljs">function L(x, u, t, p)
+    return 0.0
+end
+
+function phi(xf, uf, tf, p)
+    return xf[1]
+end</code></pre><p>Phase 1</p><pre><code class="language-julia hljs">ph1 = NOC.PH(OC)
+ph1.L = L
+ph1.phi = phi
+ph1.dyn = dyn
+
+ph1.n = n
+ph1.tau = range(start = 0, stop = 1, length = ph1.n)
+ph1.ns = ns
+ph1.nu = nu
+ph1.p = p
+
+ph1.limits.ll.u = [0.0]
+ph1.limits.ul.u = [p.utmax]
+ph1.limits.ll.x = [0.3, 0.0, mT]
+ph1.limits.ul.x = [2.0, 2.0, 2.0]
+ph1.limits.ll.xf = [0.3, 0, mT]
+ph1.limits.ul.xf = [2.0, 2.0, 2.0]
+ph1.limits.ll.xi = p.x0
+ph1.limits.ul.xi = p.x0
+ph1.limits.ll.ti = 0.0
+ph1.limits.ul.ti = 0.0
+ph1.limits.ll.tf = 0.2
+ph1.limits.ul.tf = 0.2
+ph1.limits.ll.dt = 0.0
+ph1.limits.ul.dt = 0.2</code></pre><p>Add the boundary constraints</p><pre><code class="language-julia hljs">function psi(ocp::NOC.OCP)
+    (;ph) = ocp</code></pre><p>Phase 1</p><pre><code class="language-julia hljs">    v1 = ph[1].ti - 0.0
+    v2 = ph[1].u[:, end]
+    v3 = ph[1].xi - ph[1].p.x0
+    v4 = ph[1].tf - 0.2
+
+
+    return [v2;]</code></pre><p>return nothing</p><pre><code class="language-julia hljs">end
+
+OC.psi = psi</code></pre><p>c = NOC.add_phase(ph1, OC)</p><pre><code class="language-julia hljs">NOC.solve(OC)</code></pre><p>Solve for the control and state</p><pre><code class="language-julia hljs">solution_summary(OC.model)</code></pre><p>Display results</p><pre><code class="language-julia hljs">println(&quot;Min time: &quot;, objective_value(OC.model))</code></pre><p>x, u, dt, oc = NOC.solve(OC)</p><pre><code class="language-julia hljs">f1, ax1, l1 = lines(value.(ph1.t), value.(ph1.x[1,:]))
+f2, ax2, l2 = lines(value.(ph1.t), value.(ph1.x[2,:]))
+f3, ax3, l3 = lines(value.(ph1.t), value.(ph1.x[3,:]))
+f4, ax4, l4 = lines(value.(ph1.t), value.(ph1.u[1,:]))
+display(f1)
+display(f2)
+display(f3)</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="hyper_sensetive_problem.html">« Hyper sensetive problem</a><a class="docs-footer-nextpage" href="tumor_antiogenesis.html">Tumor antiogenesis »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Saturday 6 January 2024 11:50">Saturday 6 January 2024</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
