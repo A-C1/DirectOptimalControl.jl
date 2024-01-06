@@ -1,19 +1,18 @@
-#### Goddard's rocket Model
+#### Van der Pol Oscillator
 
 State variables:
-* $y_1(t)$
-* $y_2(t)$
+$y_1(t)$
+$y_2(t)$
 
-Control variables
-* $u(t)$.
+Control variables: $u(t)$.
 
 Dynamics:
- * $$\frac{d y_1}{dt} = y_2$$
- * $$\frac{d y_2}{dt} = (1 - {y_1}^2)y_2 - y_1 + u$$
+ $$\frac{d y_1}{dt} = y_2$$
+ $$\frac{d y_2}{dt} = (1 - {y_1}^2)y_2 - y_1 + u$$
 
 Outputs: No outputs for this problem
 Objective:
-Minimize $$.
+Minimize:
 
 State Constraints:
 For this probelem there are no state constraints

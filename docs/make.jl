@@ -14,8 +14,7 @@ pages = [
     "Hyper sensetive problem" => "hyper_sensetive_problem.md",
     "Space craft" => "spacecraft.md",
     "Tumor antiogenesis" => "tumor_antiogenesis.md",
-    "Van Der Pol Oscillator" => "van_der_pol_oscillator.md",
-    "Index" => "index.md"
+    "Van Der Pol Oscillator" => "van_der_pol_oscillator.md"
 ]
 
 makedocs(sitename = "Direct Optimal Control", 
