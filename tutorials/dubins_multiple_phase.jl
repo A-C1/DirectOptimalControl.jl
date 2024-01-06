@@ -1,4 +1,6 @@
-# include("../src/DirectOptimalControl.jl")
+## include("../src/DirectOptimalControl.jl")
+## import .DirectOptimalControl as DOC
+
 import DirectOptimalControl as DOC
 
 import Ipopt
@@ -54,7 +56,7 @@ OC.mesh_iter_max = 15
 OC.objective_sense = "Min"
 set_optimizer(OC.model, Ipopt.Optimizer)
 set_attribute(OC.model, "linear_solver", "mumps")
-# set_attribute(OC.model, "print_level", 0)
+set_attribute(OC.model, "print_level", 0)
 # # set_attribute(OC.model, "max_iter", 500)
 set_attribute(OC.model, "tol", 1e-6)
 
@@ -66,7 +68,7 @@ ph1.phi = phi
 ph1.dyn = dyn
 ph1.integralfun = integralfun
 ph1.collocation_method = "hermite-simpson"
-ph1.scale_flag = false
+ph1.scale_flag = true
 
 ph1.n = n
 ph1.ns = ns
@@ -109,7 +111,7 @@ ph2.phi = phi
 ph2.dyn = dyn
 ph2.integralfun = integralfun
 ph2.collocation_method = "hermite-simpson"
-ph2.scale_flag = false
+ph2.scale_flag = true
 
 ph2.n = n
 ph2.ns = ns
@@ -164,7 +166,7 @@ ph3.limits.ul.dt = 20.0
 ph3.limits.ll.tf = ph3.limits.ll.ti + ph3.limits.ll.dt
 ph3.limits.ul.tf = ph3.limits.ul.ti + ph3.limits.ul.dt
 ph3.collocation_method = "hermite-simpson"
-ph3.scale_flag = false
+ph3.scale_flag = true
 
 
 #------------------------------------------------------
@@ -196,7 +198,7 @@ ph4.limits.ul.dt = 20.0
 ph4.limits.ll.tf = ph4.limits.ll.ti + ph4.limits.ll.dt
 ph4.limits.ul.tf = ph4.limits.ul.ti + ph4.limits.ul.dt
 ph4.collocation_method = "hermite-simpson"
-ph4.scale_flag = false
+ph4.scale_flag = true
 
 # Add the boundary constraints
 function psi(ocp::DOC.OCP)
@@ -233,8 +235,10 @@ OC.obj_llim = 0.0
 OC.obj_ulim = 43
 OC.psi_llim = [0.0, 0.0, 0.0]
 OC.psi_ulim = [0.0, 0.0, 0.0]
+
 DOC.setup_mpocp(OC)
 DOC.solve_mpocp(OC)
+# DOC.solve(OC)
 # Solve for the control and state
 solution_summary(OC.model)
 

@@ -1,13 +1,14 @@
-include("../src/DirectOptimalControl.jl")
-import .DirectOptimalControl as DOC
+## include("../src/DirectOptimalControl.jl")
+## import .DirectOptimalControl as DOC
 
+import .DirectOptimalControl as DOC
 import Ipopt
 using GLMakie
 using JuMP
 
 
 OC = DOC.OCP()
-OC.tol = 1e-5
+OC.tol = 1e-7
 OC.mesh_iter_max = 30
 OC.objective_sense = "Min"
 set_optimizer(OC.model, Ipopt.Optimizer)
@@ -27,7 +28,7 @@ uMax = +50;
 
 ns = 1
 nu = 1
-n = 25
+n = 10
 
 # System dynamics
 # Function must always return a vector``
@@ -92,8 +93,8 @@ end
 OC.psi = psi
 # # c = NOC.add_phase(ph1, OC)
 DOC.setup_mpocp(OC)
-DOC.solve_mpocp(OC)
-# DOC.solve(OC)
+# DOC.solve_mpocp(OC)
+DOC.solve(OC)
 # NOC.calcerrorphase(ph1)
 # NOC.compute_new_mesh_betts(OC)
 

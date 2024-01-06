@@ -133,6 +133,7 @@ mutable struct PH1
     # Callback function and data
     callback_fun::Function
     callback_nt::NamedTuple
+    callback_flag::Bool
 
     function PH1()
         ph = new()
@@ -151,12 +152,14 @@ mutable struct PH1
         ph.Iavgh = Int64[]
         ph.set_initial_vals = "Auto"
 
+        ph.callback_flag = false
+
         return ph
     end
 end
 
 
-mutable struct OCP1
+mutable struct OCP3
     ph::Vector{PH1}
     model::Model
     psi::Function
@@ -192,7 +195,11 @@ mutable struct OCP1
     event_constraints_upper::Vector{ConstraintRef}
     event_constraints_lower::Vector{ConstraintRef}
 
-    function OCP1()
+    # Additional constraints
+    additional_constraints_flag::Bool
+    additional_constraints::Function
+
+    function OCP3()
         x = new()
         x.model = Model()
         x.ph = PH1[]
@@ -204,12 +211,13 @@ mutable struct OCP1
         x.nkg = 0
         x.npsi = 0
         x.set_obj_lim = false
+        x.additional_constraints_flag = false
 
         return x
     end
 end
 
-function PH1(ocp::OCP1)
+function PH1(ocp::OCP3)
     ph = PH1()
     ph.id = length(ocp.ph) + 1
     push!(ocp.ph, ph)
@@ -220,4 +228,4 @@ end
 Limits = Limits0
 VarVals = VarVals0
 PH = PH1
-OCP = OCP1
+OCP = OCP3

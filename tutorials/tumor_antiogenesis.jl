@@ -1,5 +1,7 @@
-include("../src/DirectOptimalControl.jl")
-import .DirectOptimalControl as DOC
+## include("../src/DirectOptimalControl.jl")
+## import .DirectOptimalControl as DOC
+
+import DirectOptimalControl as DOC
 
 import Ipopt
 using GLMakie
@@ -11,7 +13,7 @@ OC.tol = 1e-12
 OC.mesh_iter_max = 5
 OC.objective_sense = "Min"
 set_optimizer(OC.model, Ipopt.Optimizer)
-# set_attribute(OC.model, "print_level", 0)
+set_attribute(OC.model, "print_level", 0)
 # set_attribute(OC.model, "max_iter", 500)
 # set_attribute(OC.model, "tol", 1e-4)
 
@@ -128,7 +130,8 @@ OC.npsi = 0
 # Add an option to give intial condition
 # c = NOC.add_phase(ph1, OC)
 DOC.setup_mpocp(OC)
-DOC.solve(OC)
+DOC.solve_mpocp(OC)
+# DOC.solve(OC)
 # Solve for the control and state
 solution_summary(OC.model)
 
