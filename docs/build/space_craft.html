@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Assignement to Phase object · Direct Optimal Control</title><meta name="title" content="Assignement to Phase object · Direct Optimal Control"/><meta property="og:title" content="Assignement to Phase object · Direct Optimal Control"/><meta property="twitter:title" content="Assignement to Phase object · Direct Optimal Control"/><meta name="description" content="Documentation for Direct Optimal Control."/><meta property="og:description" content="Documentation for Direct Optimal Control."/><meta property="twitter:description" content="Documentation for Direct Optimal Control."/><script data-outdated-warner src="assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="assets/documenter.js"></script><script src="search_index.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="README.html">Direct Optimal Control</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="README.html">Introduction</a></li><li><a class="tocitem" href="rocket.html">Rocket Control</a></li><li><a class="tocitem" href="alprider.html">Alp Rider</a></li><li><a class="tocitem" href="dubins_multiple_phase.html">Dubins multiple phase</a></li><li><a class="tocitem" href="dubins_interception.html">Dubins Interception</a></li><li><a class="tocitem" href="hyper_sensetive_problem.html">Hyper sensetive problem</a></li><li><a class="tocitem" href="spacecraft.html">Space craft</a></li><li><a class="tocitem" href="tumor_antiogenesis.html">Tumor antiogenesis</a></li><li><a class="tocitem" href="van_der_pol_oscillator.html">Van Der Pol Oscillator</a></li><li><a class="tocitem" href="index.html">Index</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href="space_craft.html">Assignement to Phase object</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href="space_craft.html">Assignement to Phase object</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/A-C1/DirectOptimalControl.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/A-C1/DirectOptimalControl.jl/blob/master/docs/src/space_craft.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h4 id="Goddard&#39;s-rocket-Model"><a class="docs-heading-anchor" href="#Goddard&#39;s-rocket-Model">Goddard&#39;s rocket Model</a><a id="Goddard&#39;s-rocket-Model-1"></a><a class="docs-heading-anchor-permalink" href="#Goddard&#39;s-rocket-Model" title="Permalink"></a></h4><p>State variables:</p><ul><li>Velocity: <span>$x_v(t)$</span></li><li>Altitude: <span>$x_h(t)$</span></li><li>Mass of rocket and remaining fuel, <span>$x_m(t)$</span></li></ul><p>Control variables</p><ul><li>Thrust: <span>$u_t(t)$</span>.</li></ul><p>Dynamics:</p><ul><li>Rate of ascent: <span>$\frac{d x_h}{dt} = x_v$</span></li><li>Acceleration: <span>$\frac{d x_v}{dt} = \frac{u_t - D(x_h, x_v)}{x_m} - g(x_h)$</span></li><li>Rate of mass loss: <span>$\frac{d x_m}{dt} = -\frac{u_t}{c}$</span></li></ul><p>where drag <span>$D(x_h, x_v)$</span> is a function of altitude and velocity, gravity <span>$g(x_h)$</span> is a function of altitude, and <span>$c$</span> is a constant. These forces are defined as: <span>$D(x_h, x_v) = D_c \cdot x_v^2 \cdot e^{-h_c \left( \frac{x_h-x_h(0)}{x_h(0)} \right)}$</span> <span>$g(x_h) = g_0 \cdot \left( \frac{x_h(0)}{x_h} \right)^2$</span></p><p>Outputs:</p><p>Objective: Maximize <span>$x_h(T)$</span>.</p><p>State Constraints:</p><p>Input Constraints:</p><p>Path Constrains:</p><p>Integral Constraints:</p><p>Include the necessary packages. <code>JuMP</code> is required to setup various configurations while <code>Ipopt</code> is the solver to be used. Technically all other nonlinear solvers available throught JuMP can be used but those have not yet been tested.</p><pre><code class="language-julia hljs"># include(&quot;../src/DirectOptimalControl.jl&quot;)
+# import .DirectOptimalControl as DOC
+
+import DirectOptimalControl as DOC
+using JuMP
+import Ipopt</code></pre><p>Set solver configuration Let us set first create an optimal control problem. The structure which stores all the data related to the optimal control problem is called OCP (Optimal control problem).</p><pre><code class="language-julia hljs">OC = DOC.OCP()</code></pre><p>Now we will set various parameters for the solver</p><ul><li>OC.tol : Sets up tolerence for the solver. In the intial run it is advisable to keep the tolerance high.</li><li>OC.mesh<em>iter</em>max : This is the maximum number of iterations that the solver takes</li><li>OC.objective_sense: You can set two options here &quot;Max&quot; or &quot;Min&quot; depending on weather the objective is to be minimized or maximized</li></ul><pre><code class="language-julia hljs">OC.tol = 1e-7
+OC.mesh_iter_max = 10
+OC.objective_sense = &quot;Max&quot;</code></pre><p>Now it is time to select an optimizer. Let us select the Ipopt optimizer. The OC struct contains an <code>JuMP</code> model in its field <code>OC.model</code>. We can assign any non-linear optimizer that <code>JuMP</code> supports. For this reason we needed to import <code>JuMP</code>. It is advisable to initially keep the solver tolerance higher so that the optimizer converges. You can set all the solver specific options using the <code>JuMP</code> interface to aid the convergence of the solver.</p><pre><code class="language-julia hljs">set_optimizer(OC.model, Ipopt.Optimizer)
+set_attribute(OC.model, &quot;print_level&quot;, 0)
+set_attribute(OC.model, &quot;max_iter&quot;, 500)</code></pre><p>set<em>attribute(OC.model, &quot;linear</em>solver&quot;, &quot;MA27&quot;) set_attribute(OC.model, &quot;tol&quot;, 1e-3)</p><p>Each OCP must contain atleast one phase. The synatax for adding the phase to an OCP is given by</p><pre><code class="language-julia hljs">ph = DOC.PH(OC)</code></pre><h4 id="Define-the-models-and-cost-functions"><a class="docs-heading-anchor" href="#Define-the-models-and-cost-functions">Define the models and cost functions</a><a id="Define-the-models-and-cost-functions-1"></a><a class="docs-heading-anchor-permalink" href="#Define-the-models-and-cost-functions" title="Permalink"></a></h4><p>Now let us define the objectives and functions which make up the model</p><pre><code class="language-julia hljs">cft2m = 0.3048;
+cft2km = cft2m/1000;
+cslug2kg = 14.5939029;</code></pre><p>Provide Auxiliary Data for Problem</p><pre><code class="language-julia hljs">Re = 6371203.92 # Equatorial Radius of Earth (m)
+S = 249.9091776 # Vehicle Reference Area (mˆ2)
+cl = [-0.2070 1.6756] # Parameters for Lift Coefficient
+cdd = [0.0785 -0.3529 2.0400] # Parameters for Drag Coefficient
+b = [0.07854 -0.061592 0.00621408] # Parameters for Heat Rate Model
+H = 7254.24; # Density Scale Height (m)
+al = [-0.20704 0.029244]; # Parameters for Heat Rate Model
+rho0 = 1.225570827014494; # Sea Level Atmospheric Density (kg/mˆ3)
+mu = 3.986031954093051e14; # Earth Gravitational Parameter (mˆ3/sˆ2)
+mass = 92079.2525560557; # Vehicle Mass (kg)
+
+p = (Re = Re, S = S, cl = cl, cd = cdd, b = b, H = H, al = al, rho0 = rho0, mu = mu, mass = mass)</code></pre><p>Boundary Conditions</p><pre><code class="language-julia hljs">t0 = 0
+alt0 = 79248
+rad0 = alt0+Re
+altf = +24384
+radf = altf + Re
+lon0 = 0
+lat0 = 0
+speed0 = +7802.88
+speedf = +762
+fpa0 = -1*pi/180
+fpaf = -5*pi/180
+azi0 = +90*pi/180
+azif = -90*pi/180</code></pre><p>Limits on Variables</p><pre><code class="language-julia hljs">tfMin = 0; tfMax = 3000;
+radMin = Re; radMax = rad0;
+lonMin = -pi; lonMax = -lonMin;
+latMin = -70*pi/180; latMax = -latMin;
+speedMin = 10; speedMax = 45000;
+fpaMin = -80*pi/180; fpaMax = 80*pi/180;
+aziMin = -180*pi/180; aziMax = 180*pi/180;
+aoaMin = -90*pi/180; aoaMax = -aoaMin;
+bankMin = -90*pi/180; bankMax = 1*pi/180;</code></pre><p>Provide Guess of Solution</p><pre><code class="language-julia hljs">tGuess = [0; 1000];
+radGuess = [rad0; radf];
+lonGuess = [lon0; lon0+10*pi/180];
+latGuess = [lat0; lat0+10*pi/180];
+speedGuess = [speed0; speedf];
+fpaGuess = [fpa0; fpaf];
+aziGuess = [azi0; azif];
+aoaGuess = [0; 0];
+bankGuess = [0; 0];</code></pre><h4 id="Auxillary-parameters"><a class="docs-heading-anchor" href="#Auxillary-parameters">Auxillary parameters</a><a id="Auxillary-parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Auxillary-parameters" title="Permalink"></a></h4><p>Now we create a named tuple of various parameters which will be necessary while defining the problem Note that in addition to the constants defined above we also add two additional parameters <code>PH.kp</code> and <code>OC.kg</code>. These are additional <code>JuMP</code> variables which can be optimized if required. They will not be used in this example.</p><pre><code class="language-julia hljs">ns = 6
+nu = 2
+n = 20</code></pre><h4 id="System-dynamics"><a class="docs-heading-anchor" href="#System-dynamics">System dynamics</a><a id="System-dynamics-1"></a><a class="docs-heading-anchor-permalink" href="#System-dynamics" title="Permalink"></a></h4><p>Note that the dyn function which defines the dynamics must be in a particular format. It must five inputs: x : The state of system at time t u : The input of system at time t t : The time t p : p is a named tuple of auzillary parameters required to define the fucntion k : k is a named tuple containing kg and kp</p><pre><code class="language-julia hljs">function dyn(x, u, t, p)
+    rad = x[1]; lon = x[2]; lat = x[3]; v = x[4]; fpa = x[5]; azi = x[6]
+    aoa = u[1]; bank = u[2]
+
+    cd0 = p.cd[1]
+    cd1 = p.cd[2]
+    cd2 = p.cd[3]
+    cl0 = p.cl[1]
+    cl1 = p.cl[2]
+    mu = p.mu
+    rho0 = p.rho0
+    H = p.H
+    S = p.S
+    mass = p.mass
+    altitude = rad - p.Re
+    CD = cd0 + cd1 * aoa + cd2 * aoa^2
+    rho = rho0 * exp(-altitude / H)
+    CL = cl0 + cl1 * aoa
+    q = 0.5 * rho * v^2
+    D = q * S * CD / mass
+    L = q * S * CL / mass
+    gravity = mu/rad^2
+
+    raddot = v*sin(fpa)
+    londot = v*cos(fpa)*sin(azi)/(rad*cos(lat))
+    latdot = v*cos(fpa)*cos(azi)/rad
+    vdot = -D-gravity*sin(fpa)
+    fpadot = (L*cos(bank)-cos(fpa)*(gravity-v^2/rad))/v;
+    azidot = (L*sin(bank)/cos(fpa)+v^2*cos(fpa)*sin(azi)*tan(lat)/rad)/v;
+
+    return [raddot, londot, latdot, vdot, fpadot, azidot]
+end</code></pre><p>Objective Function The objective function consists of running cost and a fixed cost. The running cost function also has syntax similar to the dynamics function. For the rocket example there is no running cost involved so the running cost function returns 0.</p><pre><code class="language-julia hljs">function L(x, u, t, p)
+    return 0.0
+end</code></pre><p>The Final cost function involves the contribution of final state in the objective Since we want to maximize the final height the function returns <code>xf[1]</code>. This is because the first state denotes the height as per our definition of the heigth function.</p><pre><code class="language-julia hljs">function phi(xf, uf, tf, p)
+    return xf[3]
+end</code></pre><p>Integral functions Some of the problems can have integral constraints associated with them in each phase Since this problem does not have an integral constraint the <code>integralfun</code> will return <code>nothing</code>.</p><pre><code class="language-julia hljs">function integralfun(x, u, t, p)
+    return nothing
+end</code></pre><p>Path functions Some of the problems can have path constraints associated with them in each phase Since this problem does not have an path constraint the <code>pathfun</code> will return <code>nothing</code>.</p><pre><code class="language-julia hljs">function pathfun(x, u, t, p)
+    v = x[4]; rad = x[1];
+    aoa = u[1]; bank = u[2]
+
+    return nothing
+end
+
+function integralfun(x, u, t, p)
+    return nothing
+end</code></pre><h1 id="Assignement-to-Phase-object"><a class="docs-heading-anchor" href="#Assignement-to-Phase-object">Assignement to Phase object</a><a id="Assignement-to-Phase-object-1"></a><a class="docs-heading-anchor-permalink" href="#Assignement-to-Phase-object" title="Permalink"></a></h1><p>Now let us assign the various functions defined above to the phase <code>ph</code> that we have just created</p><pre><code class="language-julia hljs">ph.L = L      # Adding the running cost
+ph.phi = phi  # Adding the final time cost
+ph.dyn = dyn  # Add the dynamics
+ph.integralfun = integralfun # Add the integral constraint function
+ph.pathfun = pathfun # Add the integral constraint function
+ph.n = n    # Number of points in initial mesh
+ph.ns = ns  # State dimension
+ph.nu = nu  # Input dimension
+ph.nq = 0   # Dimension of the quadrature (integral) constraint
+ph.nk = 0   # Dimension of the optimizable phase paramters
+ph.np = 0   # Dimension of the path constraints
+ph.p = p    # Auxillary parametrs named tuple</code></pre><p>Let us select some of the options for the phase</p><ul><li>Collocation method: Two options [&quot;hermite-simpson&quot;, &quot;trapezoidal&quot;]. Default is &quot;hermite-simpson&quot;</li><li>Scale: Two options <code>true</code> or <code>false</code></li></ul><pre><code class="language-julia hljs">ph.collocation_method = &quot;hermite-simpson&quot;
+ph.scale_flag = true</code></pre><p>Now let us set the upper bounds and lower bounds on all the variables pathconstaints and integral constraints. The upper and lower bounds are defined in the limits field of the PH structure. The limits feild contains <code>ll</code> structure which corrsponds to lower limits. The <code>ul</code> corresponds to upper bounds. The <code>ll</code> and <code>ul structures</code> both contain the JuMP variables on which we wanrt to apply upper and lower bounds. These are: <code>u</code> : Input <code>x</code> : State <code>xf</code> : Final State <code>xi</code>: Initial State <code>tf</code>: Final State <code>ti</code>: Initial time If we want a particular variable to have a fixwd value set both the upper limits and the lower limits to the same value</p><pre><code class="language-julia hljs">ph.limits.ll.u = [aoaMin, bankMin]      # Lower bounds on input. Vector of dimension `nu`
+ph.limits.ul.u = [aoaMax, bankMax]  # Upper bounds on input. Vector of dimesion `nu`
+ph.limits.ll.x =  [radMin, lonMin, latMin, speedMin, fpaMin, aziMin] # Lower bounds on state trajectory. Vector of dimension `ns`
+ph.limits.ul.x =  [radMax, lonMax, latMax, speedMax, fpaMax, aziMax] # Upper bounds on state trajectory. Vector of dimesion `ns`
+ph.limits.ll.xf =  [radf, lonMin, latMin, speedf, fpaf, aziMin];    # Lower bounds on final state. Vector of dimension `nu`
+ph.limits.ul.xf =  [radf, lonMax, latMax, speedf, fpaf, aziMax] # Upper bounds on input. Vector of dimesion `ns`
+ph.limits.ll.xi = [rad0, lon0, lat0, speed0, fpa0, azi0]  # Lower bounds on initial state. Vector of dimension `ns`
+ph.limits.ul.xi = [rad0, lon0, lat0, speed0, fpa0, azi0]  # Upper bounds on initial state. Vector of dimesion `ns`
+ph.limits.ll.ti = t0   # Lower bounds on initial time. A Scalar.
+ph.limits.ul.ti = t0   # Upper bounds on initial time. A Scalar
+ph.limits.ll.tf = tfMin   # Lower bounds on input. Vector of dimension `nu`
+ph.limits.ul.tf = tfMax   # Upper bounds on input. Vector of dimesion `ns`
+ph.limits.ll.dt = tfMin     # Lower bounds on input. Vector of dimension `nu`
+ph.limits.ul.dt = tfMax     # Upper bounds on input. Vector of dimesion `ns`
+ph.limits.ll.k = [] # Lower bounds on input. Vector of dimension `nu`
+ph.limits.ul.k = [] # Upper bounds on input. Vector of dimesion `ns`
+ph.limits.ll.path = [] # Lower bounds on input. Vector of dimension `nu`
+ph.limits.ul.path = [] # Upper bounds on input. Vector of dimesion `ns`</code></pre><h3 id="Set-intial-values"><a class="docs-heading-anchor" href="#Set-intial-values">Set intial values</a><a id="Set-intial-values-1"></a><a class="docs-heading-anchor-permalink" href="#Set-intial-values" title="Permalink"></a></h3><p>There are two options here &quot;Auto&quot; and &quot;Manual&quot;. If &quot;Auto&quot; option is selected one need not specify tau and other init values</p><pre><code class="language-julia hljs">ph.set_initial_vals = &quot;Auto&quot;</code></pre><p>ph.tau = range(start = 0, stop = 1, length = ph.n) ph.xinit = ones(ph.ns, ph.n) ph.uinit = ones(ph.nu, ph.n) ph.tfinit = ph.limits.ll.tf ph.tiinit = ph.limits.ll.ti ph.kinit  = (ph.limits.ll.k + ph.limits.ul.k)/2</p><h2 id="Specify-global-parameters"><a class="docs-heading-anchor" href="#Specify-global-parameters">Specify global parameters</a><a id="Specify-global-parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Specify-global-parameters" title="Permalink"></a></h2><p>This problem only contains a single phase. However, in problems with multiple phases there are parameters which are global to all the phases. We specify it here.</p><h3 id="Set-limits-on-objective-function"><a class="docs-heading-anchor" href="#Set-limits-on-objective-function">Set limits on objective function</a><a id="Set-limits-on-objective-function-1"></a><a class="docs-heading-anchor-permalink" href="#Set-limits-on-objective-function" title="Permalink"></a></h3><p>It has been observed that it is better to not set it as in keep the value false. However, an option is provided to set upper and lower values for the objective function</p><pre><code class="language-julia hljs">OC.set_obj_lim = false
+OC.obj_llim = -2.0
+OC.obj_ulim = 2.0</code></pre><h2 id="Setting-up-global-parameters"><a class="docs-heading-anchor" href="#Setting-up-global-parameters">Setting up global parameters</a><a id="Setting-up-global-parameters-1"></a><a class="docs-heading-anchor-permalink" href="#Setting-up-global-parameters" title="Permalink"></a></h2><ul><li>OC.nkg: Number of global parameters</li><li>OC.kg_llim: Lower bound on global parameters</li><li>OC.kg_ulim: Upper bound on global parameters</li></ul><p>Note that these have to be passed to the function through the auxillary parameters tupple <code>p</code></p><pre><code class="language-julia hljs">OC.nkg = 0
+OC.kg_llim = []
+OC.kg_ulim = []</code></pre><h2 id="Setting-up-the-event-function"><a class="docs-heading-anchor" href="#Setting-up-the-event-function">Setting up the event function</a><a id="Setting-up-the-event-function-1"></a><a class="docs-heading-anchor-permalink" href="#Setting-up-the-event-function" title="Permalink"></a></h2><p>*<code>OC.npsi</code>: Number of constraints in event function *<code>OC.psi_llim</code>: Lower bound on constraint function *<code>OC.psi_ulim</code>: Upper bound on constraint function *<code>OC.psi</code> : Function which contains the event constraints</p><pre><code class="language-julia hljs">OC.npsi = 0
+OC.psi_llim = []
+OC.psi_ulim = []</code></pre><p>Not the format of he event function <code>psi</code>. It takes the OCP object as input. The OCP object has all the phases stored in it in the field <code>OC.ph</code>. Each phase has state variables which can be accessed by <code>ph.x</code> and input variable which can be accessed by <code>ph.u</code>.</p><pre><code class="language-julia hljs">function psi(ocp::DOC.OCP)
+    (;ph) = ocp
+
+    return nothing
+end
+OC.psi = psi</code></pre><p>Call function to setup the JuMP model for solving optimal control problem</p><pre><code class="language-julia hljs">DOC.setup_mpocp(OC)</code></pre><p>Solve for the control and state</p><pre><code class="language-julia hljs">DOC.solve_mpocp(OC)</code></pre><p>DOC.solve(OC)</p><pre><code class="language-julia hljs">solution_summary(OC.model)</code></pre><p>Display results</p><pre><code class="language-julia hljs">println(&quot;Objective Value: &quot;, objective_value(OC.model))
+
+# using GLMakie
+# f = Figure()
+# for i = 1:2:ns
+#     ax = Axis(f[i,1])
+#     lines!(ax, value.(ph.t), value.(ph.x[i,:]))
+#     if i+1 &lt;= ns
+#         ax = Axis(f[i,2])
+#         lines!(ax, value.(ph.t), value.(ph.x[i+1,:]))
+#     end
+# end
+# #     ax2 = Axis(f[2,1])
+# # lines!(ax2, value.(ph.t), value.(ph.x[2,:]))
+# # ax3 = Axis(f[1, 2])
+# # lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
+# # ax4 = Axis(f[2, 2])
+# # lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
+# display(f)</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Saturday 6 January 2024 16:52">Saturday 6 January 2024</span>. Using Julia version 1.10.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

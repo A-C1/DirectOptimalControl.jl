@@ -62,8 +62,7 @@ OC.objective_sense = "Max"
 set_optimizer(OC.model, Ipopt.Optimizer)
 set_attribute(OC.model, "print_level", 0)
 set_attribute(OC.model, "max_iter", 500)
-# set_attribute(OC.model, "linear_solver", "MA27")
-# set_attribute(OC.model, "tol", 1e-3)
+## set_attribute(OC.model, "tol", 1e-3)
 
 
 # Each OCP must contain atleast one phase. The synatax for adding the phase

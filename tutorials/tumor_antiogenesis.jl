@@ -109,7 +109,6 @@ ph.limits.ul.integral = [A]
 # Add the boundary constraints
 function psi(ocp::DOC.OCP)
     (;ph) = ocp
-    # return [v2;]
     return nothing
 end
 

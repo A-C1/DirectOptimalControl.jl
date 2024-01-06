@@ -80,7 +80,7 @@ ph1.limits.ul.dt = 20.0
 ph1.limits.ll.k = []
 ph1.limits.ul.k = []
 
-# ph.set_initial_values can take two values: "Auto" and "User"
+# `ph.set_initial_values` can take two values: "Auto" and "User"
 # Set initial values
 ph1.set_initial_vals = "Auto"  
 
