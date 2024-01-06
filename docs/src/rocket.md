@@ -184,7 +184,6 @@ end
 ````
 
 #### Adding functions and parameters to a Phase
-
 Now let us assign the various functions defined above to the phase `ph` that we have created
 
 ````julia

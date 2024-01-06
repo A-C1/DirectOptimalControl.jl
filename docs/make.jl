@@ -6,7 +6,6 @@ using Literate
 
 
 pages = [
-    "Home" => "index.md",
     "Introduction" => "README.md",
     "Rocket Control" => "rocket.md",
     "Alp Rider" => "alprider.md",
@@ -15,6 +14,8 @@ pages = [
     "Hyper sensetive problem" => "hyper_sensetive_problem.md",
     "Space craft" => "spacecraft.md",
     "Tumor antiogenesis" => "tumor_antiogenesis.md",
+    "Van Der Pol Oscillator" => "van_der_pol_oscillator.md"
+    "Index" => "index.md",
 ]
 
 makedocs(sitename = "Direct Optimal Control", 

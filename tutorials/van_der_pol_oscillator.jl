@@ -40,7 +40,6 @@ import DirectOptimalControl as DOC
 
 using JuMP
 import Ipopt
-using GLMakie
 
 # Let us set first create an optimal control problem. The structure which stores all the data related to the 
 # optimal control problem is called OCP (Optimal control problem).
@@ -257,6 +256,7 @@ mu = DOC.path_constraint_adjoints(ph, OC)
 # Display results
 println("Objective Value: ", objective_value(OC.model))
 
+## using GLMakie
 ## f = Figure() 
 ## ax1 = Axis(f[1,1])
 ## lines!(ax1, value.(ph.t), value.(ph.x[1,:]))

@@ -150,7 +150,6 @@ function pathfun(x, u, t, p)
 end
 
 # #### Adding functions and parameters to a Phase 
-
 # Now let us assign the various functions defined above to the phase `ph` that we have created
 ph.L = L      # Adding the running cost
 ph.phi = phi  # Adding the final time cost
