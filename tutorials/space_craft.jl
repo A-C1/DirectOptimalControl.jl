@@ -37,6 +37,10 @@
 # Include the necessary packages. `JuMP` is required to setup various configurations
 # while `Ipopt` is the solver to be used. Technically all other nonlinear solvers available
 # throught JuMP can be used but those have not yet been tested.
+
+## include("../src/DirectOptimalControl.jl")
+## import .DirectOptimalControl as DOC
+
 import DirectOptimalControl as DOC
 using JuMP
 import Ipopt
@@ -60,7 +64,7 @@ OC.objective_sense = "Max"
 # initially keep the solver tolerance higher so that the optimizer converges. You can set all the solver specific options using the
 # `JuMP` interface to aid the convergence of the solver.
 set_optimizer(OC.model, Ipopt.Optimizer)
-# set_attribute(OC.model, "print_level", 0)
+set_attribute(OC.model, "print_level", 0)
 set_attribute(OC.model, "max_iter", 500)
 # set_attribute(OC.model, "linear_solver", "MA27")
 # set_attribute(OC.model, "tol", 1e-3)
