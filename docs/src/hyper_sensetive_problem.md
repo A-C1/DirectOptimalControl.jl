@@ -1,23 +1,19 @@
 ````julia
-include("../src/DirectOptimalControl.jl")
-import .DirectOptimalControl as DOC
+# include("../src/DirectOptimalControl.jl")
+# import .DirectOptimalControl as DOC
 
+import .DirectOptimalControl as DOC
 import Ipopt
-using GLMakie
 using JuMP
 
 
 OC = DOC.OCP()
-OC.tol = 1e-5
+OC.tol = 1e-7
 OC.mesh_iter_max = 30
 OC.objective_sense = "Min"
 set_optimizer(OC.model, Ipopt.Optimizer)
-````
-
-set_attribute(OC.model, "max_iter", 500)
-set_attribute(OC.model, "tol", 1e-3)
-
-````julia
+# set_attribute(OC.model, "max_iter", 500)
+# set_attribute(OC.model, "tol", 1e-3)
 set_attribute(OC.model, "print_level", 0)
 
 
@@ -32,7 +28,7 @@ uMax = +50;
 
 ns = 1
 nu = 1
-n = 25
+n = 10
 ````
 
 System dynamics
@@ -99,23 +95,14 @@ Add the boundary constraints
 function psi(ocp::DOC.OCP)
     (;ph) = ocp
 
-
     return nothing
 end
 
 OC.psi = psi
-````
-
-# c = NOC.add_phase(ph1, OC)
-
-````julia
 DOC.setup_mpocp(OC)
-DOC.solve_mpocp(OC)
-````
-
+# DOC.solve_mpocp(OC)
 DOC.solve(OC)
-NOC.calcerrorphase(ph1)
-NOC.compute_new_mesh_betts(OC)
+````
 
 Solve for the control and state
 
@@ -127,13 +114,10 @@ Display results
 
 ````julia
 println("Min value: ", objective_value(OC.model))
-````
 
-x, u, dt, oc = NOC.solve(OC)
-
-````julia
-f1, ax1, l1 = lines(value.(ph.t), value.(ph.x[1,:]))
-f2, ax2, l2 = lines(value.(ph.t), value.(ph.u[1,:]))
+# using GLMakie
+# f1, ax1, l1 = lines(value.(ph.t), value.(ph.x[1,:]))
+# f2, ax2, l2 = lines(value.(ph.t), value.(ph.u[1,:]))
 ````
 
 ---

@@ -1,10 +1,9 @@
-include("../src/DirectOptimalControl.jl")
-
 ````julia
-import DirectOptimalControl as DOC
+# include("../src/DirectOptimalControl.jl")
+# import .DirectOptimalControl as DOC
 
+import DirectOptimalControl as DOC
 import Ipopt
-using GLMakie
 using JuMP
 ````
 
@@ -18,27 +17,10 @@ nu = 2     # Number of inputs
 n = 20    # Time steps
 ````
 
-x20 = [0, 0, -π / 2]
-x2f = [5.0, 5.0, π / 2 + π / 4]
-p2 = (xf=x2f, x0=x10, vm = vm, um = um, t0 = 0.0)
-
-x30 = [0, 0, -π / 2]
-x3f = [5.0, 5.0, π / 2 + π / 4]
-p3 = (xf=x3f, x0=x10, vm = vm, um = um, t0 = 0.0)
-x40 = [0, 0, -π / 2]
-x4f = [5.0, 5.0, π / 2 + π / 4]
-p4 = (xf=x4f, x0=x10, vm = vm, um = um, t0 = 0.0)
-xf = [-5.0, 0.0, 0.0]
-
 System dynamics
 
 ````julia
 function dyn(x, u, t, p)
-````
-
-vm = p.vm
-
-````julia
     return [u[2] * cos(x[3]), u[2] * sin(x[3]), u[1]]
 end
 ````
@@ -69,17 +51,12 @@ OC.mesh_iter_max = 15
 OC.objective_sense = "Min"
 set_optimizer(OC.model, Ipopt.Optimizer)
 set_attribute(OC.model, "linear_solver", "mumps")
-````
-
 set_attribute(OC.model, "print_level", 0)
 # set_attribute(OC.model, "max_iter", 500)
-
-````julia
 set_attribute(OC.model, "tol", 1e-6)
 ````
 
-#------------------------------------------------------
-# Phase 1
+Phase 1
 
 ````julia
 ph1 = DOC.PH(OC)
@@ -88,7 +65,7 @@ ph1.phi = phi
 ph1.dyn = dyn
 ph1.integralfun = integralfun
 ph1.collocation_method = "hermite-simpson"
-ph1.scale_flag = false
+ph1.scale_flag = true
 
 ph1.n = n
 ph1.ns = ns
@@ -97,7 +74,7 @@ ph1.nq = 0
 ph1.nk = 0
 ````
 
-# Auxillary parameters
+Auxillary parameters
 
 ````julia
 ph1.p = (k1 = 1.0, k2 = 2.0)
@@ -127,10 +104,7 @@ Set initial values
 ph1.set_initial_vals = "Auto"
 ````
 
-------------------------------------------------------
-
-#------------------------------------------------------
-# Phase 2
+Phase 2
 
 ````julia
 ph2 = DOC.PH(OC)
@@ -139,7 +113,7 @@ ph2.phi = phi
 ph2.dyn = dyn
 ph2.integralfun = integralfun
 ph2.collocation_method = "hermite-simpson"
-ph2.scale_flag = false
+ph2.scale_flag = true
 
 ph2.n = n
 ph2.ns = ns
@@ -195,7 +169,7 @@ ph3.limits.ul.dt = 20.0
 ph3.limits.ll.tf = ph3.limits.ll.ti + ph3.limits.ll.dt
 ph3.limits.ul.tf = ph3.limits.ul.ti + ph3.limits.ul.dt
 ph3.collocation_method = "hermite-simpson"
-ph3.scale_flag = false
+ph3.scale_flag = true
 ````
 
 Phase 4
@@ -228,7 +202,7 @@ ph4.limits.ul.dt = 20.0
 ph4.limits.ll.tf = ph4.limits.ll.ti + ph4.limits.ll.dt
 ph4.limits.ul.tf = ph4.limits.ul.ti + ph4.limits.ul.dt
 ph4.collocation_method = "hermite-simpson"
-ph4.scale_flag = false
+ph4.scale_flag = true
 ````
 
 Add the boundary constraints
@@ -236,43 +210,11 @@ Add the boundary constraints
 ````julia
 function psi(ocp::DOC.OCP)
     (;ph) = ocp
-````
 
-# Phase 1
-v1 = ph[1].ti - 0.0
-v2 = ph[1].xf - ph[1].p.xfref
-v3 = ph[1].xi - ph[1].p.x0
-
-# Phase 2
-
-````julia
     v4 = ph[2].ti - ph[1].tf
-````
-
-v5 = ph[2].xi - ph[1].xf
-v6 = ph[2].xf - [-5, 5, 0.0]
-
-# Phase 3
-
-````julia
     v7 = ph[3].ti - ph[2].tf
-````
-
-v8 = ph[3].xi - ph[2].xf
-v9 = ph[3].xf - [-5, -5, 0.0]
-
-# Phase 4
-
-````julia
     v10 = ph[4].ti - ph[3].tf
-````
 
-v11 = ph[4].xi - ph[3].xf
-v12 = ph[4].xf - ph[4].p.x0
-
-return [v1; v2; v3; v4; v5; v6; v7; v8; v9; v10; v11; v12]#; v13; v14; v15]
-
-````julia
     return [v4, v7, v10]
 end
 
@@ -283,8 +225,10 @@ OC.obj_llim = 0.0
 OC.obj_ulim = 43
 OC.psi_llim = [0.0, 0.0, 0.0]
 OC.psi_ulim = [0.0, 0.0, 0.0]
+
 DOC.setup_mpocp(OC)
 DOC.solve_mpocp(OC)
+# DOC.solve(OC)
 ````
 
 Solve for the control and state
@@ -297,40 +241,35 @@ Display results
 
 ````julia
 println("Min time: ", objective_value(OC.model))
-````
-
-x, u, dt, oc = NOC.solve(OC)
-
-````julia
-f1, ax1, l1 = lines(value.(ph1.x[1, :]), value.(ph1.x[2, :]))
-l2 = lines!(ax1, value.(ph2.x[1, :]), value.(ph2.x[2, :]))
-l3 = lines!(ax1, value.(ph3.x[1, :]), value.(ph3.x[2, :]))
-l4 = lines!(ax1, value.(ph4.x[1, :]), value.(ph4.x[2, :]))
-ax1.autolimitaspect = 1.0
-````
-
-f1
-
-````julia
-f2, ax2, l21 = lines(value.(ph1.t), value.(ph1.u[1, :]))
-l22 = lines!(ax2, value.(ph2.t), value.(ph2.u[1, :]))
-l23 = lines!(ax2, value.(ph3.t), value.(ph3.u[1, :]))
-l24 = lines!(ax2, value.(ph4.t), value.(ph4.u[1, :]))
-f2
-
-f3, ax3, l31 = lines(value.(ph1.t), value.(ph1.u[2, :]))
-l32 = lines!(ax3, value.(ph2.t), value.(ph2.u[2, :]))
-l33 = lines!(ax3, value.(ph3.t), value.(ph3.u[2, :]))
-l34 = lines!(ax3, value.(ph4.t), value.(ph4.u[2, :]))
-f3
 
 
-f4, ax4, l4 = lines(value.(ph1.xinit[1, :]), value.(ph1.xinit[2, :]))
-l2 = lines!(ax4, value.(ph2.xinit[1, :]), value.(ph2.xinit[2, :]))
-l3 = lines!(ax4, value.(ph3.xinit[1, :]), value.(ph3.xinit[2, :]))
-l4 = lines!(ax4, value.(ph4.xinit[1, :]), value.(ph4.xinit[2, :]))
-ax4.autolimitaspect = 1.0
-f4
+# using GLMakie
+# f1, ax1, l1 = lines(value.(ph1.x[1, :]), value.(ph1.x[2, :]))
+# l2 = lines!(ax1, value.(ph2.x[1, :]), value.(ph2.x[2, :]))
+# l3 = lines!(ax1, value.(ph3.x[1, :]), value.(ph3.x[2, :]))
+# l4 = lines!(ax1, value.(ph4.x[1, :]), value.(ph4.x[2, :]))
+# ax1.autolimitaspect = 1.0
+# # f1
+
+# f2, ax2, l21 = lines(value.(ph1.t), value.(ph1.u[1, :]))
+# l22 = lines!(ax2, value.(ph2.t), value.(ph2.u[1, :]))
+# l23 = lines!(ax2, value.(ph3.t), value.(ph3.u[1, :]))
+# l24 = lines!(ax2, value.(ph4.t), value.(ph4.u[1, :]))
+# f2
+
+# f3, ax3, l31 = lines(value.(ph1.t), value.(ph1.u[2, :]))
+# l32 = lines!(ax3, value.(ph2.t), value.(ph2.u[2, :]))
+# l33 = lines!(ax3, value.(ph3.t), value.(ph3.u[2, :]))
+# l34 = lines!(ax3, value.(ph4.t), value.(ph4.u[2, :]))
+# f3
+
+
+# f4, ax4, l4 = lines(value.(ph1.xinit[1, :]), value.(ph1.xinit[2, :]))
+# l2 = lines!(ax4, value.(ph2.xinit[1, :]), value.(ph2.xinit[2, :]))
+# l3 = lines!(ax4, value.(ph3.xinit[1, :]), value.(ph3.xinit[2, :]))
+# l4 = lines!(ax4, value.(ph4.xinit[1, :]), value.(ph4.xinit[2, :]))
+# ax4.autolimitaspect = 1.0
+# f4
 ````
 
 ---

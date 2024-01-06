@@ -4,7 +4,6 @@
 import DirectOptimalControl as DOC
 
 import Ipopt
-using GLMakie
 using JuMP
 
 
@@ -14,14 +13,11 @@ OC.mesh_iter_max = 5
 OC.objective_sense = "Min"
 set_optimizer(OC.model, Ipopt.Optimizer)
 set_attribute(OC.model, "print_level", 0)
-# set_attribute(OC.model, "max_iter", 500)
-# set_attribute(OC.model, "tol", 1e-4)
+## set_attribute(OC.model, "max_iter", 500)
+## set_attribute(OC.model, "tol", 1e-4)
 
 # Parameters:
-#-------------------------------------------------------------------%
-#-------------------- Data Required by Problem ---------------------%
-#-------------------------------------------------------------------%
-
+# Data Required by Problem 
 zeta = 0.084
 b = 5.85
 d = 0.00873
@@ -30,10 +26,7 @@ mu = 0.02
 a = 75
 A = 15
 
-
-#-------------------------------------------------------------------%
-#----------------------- Boundary Conditions -----------------------%
-#-------------------------------------------------------------------%
+# Boundary Conditions 
 pMax = ((b-mu)/d)^(3/2)
 pMin = 0.1
 qMax = pMax
@@ -81,9 +74,6 @@ function integralfun(x, u, t, p)
     return [u[1]]  
 end
 
-
-
-#------------------------------------------------------
 # Phase 1
 ph = DOC.PH(OC)
 ph.L = L
@@ -93,7 +83,6 @@ ph.integralfun = integralfun
 ph.collocation_method = "trapezoidal"
 
 ph.n = n
-# ph.tau = range(start = 0, stop = 1, length = ph.n)
 ph.ns = ns
 ph.nu = nu
 ph.nq = nq
@@ -127,20 +116,15 @@ end
 OC.psi = psi
 OC.npsi = 0
 
-# Add an option to give intial condition
-# c = NOC.add_phase(ph1, OC)
 DOC.setup_mpocp(OC)
 DOC.solve_mpocp(OC)
-# DOC.solve(OC)
-# Solve for the control and state
 solution_summary(OC.model)
 
 # Display results
 println("Min time: ", objective_value(OC.model))
 
-# x, u, dt, oc = NOC.solve(OC)
-
-fx1, ax1, l1 = scatter(value.(ph.t), value.(ph.x[1,:]))
-fx2, ax2, l2 = scatter(value.(ph.t), value.(ph.x[2,:]))
-fu1 = scatter(value.(ph.t), value.(ph.u[1,:]))
-fx1
+## using GLMakie
+## fx1, ax1, l1 = scatter(value.(ph.t), value.(ph.x[1,:]))
+## fx2, ax2, l2 = scatter(value.(ph.t), value.(ph.x[2,:]))
+## fu1 = scatter(value.(ph.t), value.(ph.u[1,:]))
+## fx1

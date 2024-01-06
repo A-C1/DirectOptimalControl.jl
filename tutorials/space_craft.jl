@@ -1,16 +1,14 @@
-# ## Overview
-
-# ### Goddard's rocket Model
+# #### Goddard's rocket Model
 
 # State variables:
 # * Velocity: $x_v(t)$
 # * Altitude: $x_h(t)$
 # * Mass of rocket and remaining fuel, $x_m(t)$
 
-# ### Control variables
+# Control variables
 # * Thrust: $u_t(t)$.
 
-# ### Dynamics:
+# Dynamics:
 #  * Rate of ascent: $$\frac{d x_h}{dt} = x_v$$
 #  * Acceleration: $$\frac{d x_v}{dt} = \frac{u_t - D(x_h, x_v)}{x_m} - g(x_h)$$
 #  * Rate of mass loss: $$\frac{d x_m}{dt} = -\frac{u_t}{c}$$
@@ -20,20 +18,19 @@
 # $$D(x_h, x_v) = D_c \cdot x_v^2 \cdot e^{-h_c \left( \frac{x_h-x_h(0)}{x_h(0)} \right)}$$
 # $$g(x_h) = g_0 \cdot \left( \frac{x_h(0)}{x_h} \right)^2$$
 
-# ### Outputs:
+# Outputs:
 
-# ### Objective: 
+# Objective: 
 # Maximize $x_h(T)$.
 
-# ### State Constraints:
+# State Constraints:
 
-# ### Input Constraints:
+# Input Constraints:
 
-# ### Path Constrains:
+# Path Constrains:
 
-# ### Integral Constraints:
+# Integral Constraints:
 
-# ## Start code
 # Include the necessary packages. `JuMP` is required to setup various configurations
 # while `Ipopt` is the solver to be used. Technically all other nonlinear solvers available
 # throught JuMP can be used but those have not yet been tested.
@@ -44,9 +41,8 @@
 import DirectOptimalControl as DOC
 using JuMP
 import Ipopt
-using GLMakie
 
-# ## Set solver configuration
+# Set solver configuration
 # Let us set first create an optimal control problem. The structure which stores all the data related to the 
 # optimal control problem is called OCP (Optimal control problem).
 OC = DOC.OCP()
@@ -74,14 +70,13 @@ set_attribute(OC.model, "max_iter", 500)
 # to an OCP is given by
 ph = DOC.PH(OC)
 
-# # Define the models and cost functions
+# #### Define the models and cost functions
 # Now let us define the objectives and functions which make up the model
 cft2m = 0.3048;
 cft2km = cft2m/1000;
 cslug2kg = 14.5939029;
-#-------------------------------------------------------------------------#
-#------------------ Provide Auxiliary Data for Problem -------------------#
-#-------------------------------------------------------------------------#
+
+# Provide Auxiliary Data for Problem 
 Re = 6371203.92 # Equatorial Radius of Earth (m)
 S = 249.9091776 # Vehicle Reference Area (mˆ2)
 cl = [-0.2070 1.6756] # Parameters for Lift Coefficient
@@ -94,9 +89,8 @@ mu = 3.986031954093051e14; # Earth Gravitational Parameter (mˆ3/sˆ2)
 mass = 92079.2525560557; # Vehicle Mass (kg)
 
 p = (Re = Re, S = S, cl = cl, cd = cdd, b = b, H = H, al = al, rho0 = rho0, mu = mu, mass = mass)
-#------------------------------------------------------------------%
-#----------------------- Boundary Conditions -----------------------%
-#-------------------------------------------------------------------%
+
+# Boundary Conditions 
 t0 = 0
 alt0 = 79248
 rad0 = alt0+Re
@@ -111,9 +105,7 @@ fpaf = -5*pi/180
 azi0 = +90*pi/180
 azif = -90*pi/180
 
-#-------------------------------------------------------------------%
-#----------------------- Limits on Variables -----------------------%
-#-------------------------------------------------------------------%
+# Limits on Variables 
 tfMin = 0; tfMax = 3000;
 radMin = Re; radMax = rad0;
 lonMin = -pi; lonMax = -lonMin;
@@ -123,9 +115,8 @@ fpaMin = -80*pi/180; fpaMax = 80*pi/180;
 aziMin = -180*pi/180; aziMax = 180*pi/180;
 aoaMin = -90*pi/180; aoaMax = -aoaMin;
 bankMin = -90*pi/180; bankMax = 1*pi/180;
-#-------------------------------------------------------------------------%
-#---------------------- Provide Guess of Solution ------------------------%
-#-------------------------------------------------------------------------%
+
+# Provide Guess of Solution 
 tGuess = [0; 1000];
 radGuess = [rad0; radf];
 lonGuess = [lon0; lon0+10*pi/180];
@@ -146,7 +137,7 @@ ns = 6
 nu = 2
 n = 20
 
-# ### System dynamics
+# #### System dynamics
 # Note that the dyn function which defines the dynamics must be in a particular format.
 # It must five inputs: 
 # x : The state of system at time t
@@ -159,9 +150,6 @@ function dyn(x, u, t, p)
     rad = x[1]; lon = x[2]; lat = x[3]; v = x[4]; fpa = x[5]; azi = x[6]
     aoa = u[1]; bank = u[2]
 
-    # --------------------------------------------------
-    # ------- Compute the Aerodynamic Quantities -------
-    # --------------------------------------------------
     cd0 = p.cd[1]
     cd1 = p.cd[2]
     cd2 = p.cd[3]
@@ -188,16 +176,10 @@ function dyn(x, u, t, p)
     fpadot = (L*cos(bank)-cos(fpa)*(gravity-v^2/rad))/v;
     azidot = (L*sin(bank)/cos(fpa)+v^2*cos(fpa)*sin(azi)*tan(lat)/rad)/v;
 
-
-
     return [raddot, londot, latdot, vdot, fpadot, azidot]
 end
 
-function integralfun(x, u, t, p)
-    return nothing    
-end
-
-# ### Objective Function
+# Objective Function
 # The objective function consists of running cost and a fixed cost.
 # The running cost function also has syntax similar to the dynamics function.
 # For the rocket example there is no running cost involved so the running
@@ -213,14 +195,14 @@ function phi(xf, uf, tf, p)
     return xf[3]
 end
 
-# ### Integral functions
+# Integral functions
 # Some of the problems can have integral constraints associated with them in each phase
 # Since this problem does not have an integral constraint the `integralfun` will return `nothing`.
 function integralfun(x, u, t, p)
     return nothing
 end
 
-# ### Path functions
+# Path functions
 # Some of the problems can have path constraints associated with them in each phase
 # Since this problem does not have an path constraint the `pathfun` will return `nothing`.
 function pathfun(x, u, t, p)
@@ -349,20 +331,21 @@ solution_summary(OC.model)
 # Display results
 println("Objective Value: ", objective_value(OC.model))
 
-f = Figure() 
-for i = 1:2:ns
-    ax = Axis(f[i,1])
-    lines!(ax, value.(ph.t), value.(ph.x[i,:]))
-    if i+1 <= ns
-        ax = Axis(f[i,2])
-        lines!(ax, value.(ph.t), value.(ph.x[i+1,:]))
-    end
-end
-#     ax2 = Axis(f[2,1])
-# lines!(ax2, value.(ph.t), value.(ph.x[2,:]))
-# ax3 = Axis(f[1, 2])
-# lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
-# ax4 = Axis(f[2, 2])
-# lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
-display(f)
+## using GLMakie
+## f = Figure() 
+## for i = 1:2:ns
+##     ax = Axis(f[i,1])
+##     lines!(ax, value.(ph.t), value.(ph.x[i,:]))
+##     if i+1 <= ns
+##         ax = Axis(f[i,2])
+##         lines!(ax, value.(ph.t), value.(ph.x[i+1,:]))
+##     end
+## end
+## #     ax2 = Axis(f[2,1])
+## # lines!(ax2, value.(ph.t), value.(ph.x[2,:]))
+## # ax3 = Axis(f[1, 2])
+## # lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
+## # ax4 = Axis(f[2, 2])
+## # lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
+## display(f)
 

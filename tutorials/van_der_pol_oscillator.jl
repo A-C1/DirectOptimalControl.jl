@@ -27,7 +27,7 @@
 # Integral Constraints:
 # For this problem there are no integral constraints
 
-# ## Start code
+# Start code
 # Include the necessary packages. `JuMP` is required to setup various configurations
 # while `Ipopt` is the solver to be used. Technically all other nonlinear solvers available
 # throught JuMP can be used but those have not yet been tested.
@@ -42,7 +42,6 @@ using JuMP
 import Ipopt
 using GLMakie
 
-# ## Set solver configuration
 # Let us set first create an optimal control problem. The structure which stores all the data related to the 
 # optimal control problem is called OCP (Optimal control problem).
 OC = DOC.OCP()
@@ -110,10 +109,6 @@ function dyn(x, u, t, p)
     return [y1n, y2n]
 end
 
-function integralfun(x, u, t, p)
-    return nothing    
-end
-
 # #### Objective Function
 # The objective function consists of running cost and a fixed cost.
 # The running cost function also has syntax similar to the dynamics function.
@@ -147,8 +142,6 @@ function integralfun(x, u, t, p)
     return nothing
 end
 
-# # Adding functions and parameters to a Phase 
-
 # Now let us assign the various functions defined above to the phase `ph` that we have created
 ph.L = L      # Adding the running cost
 ph.phi = phi  # Adding the final time cost
@@ -166,7 +159,6 @@ ph.p = p    # Auxillary parametrs named tuple
 # * Collocation method: Two options ["hermite-simpson", "trapezoidal"]. Default is "hermite-simpson"
 # * Scale: Two options `true` or `false`
 ph.collocation_method = "hermite-simpson"
-# ph.collocation_method = "trapezoidal"
 ph.scale_flag = true
 
 
@@ -256,34 +248,32 @@ DOC.setup_mpocp(OC)
 # Solve for the control and state
 DOC.solve_mpocp(OC)
 # DOC.solve(OC)
-# solution_summary(OC.model)
-
+solution_summary(OC.model)
 
 # Compute co-states
 lambda = DOC.differential_constraints_adjoints(ph, OC)
 mu = DOC.path_constraint_adjoints(ph, OC)
 
-
 # Display results
 println("Objective Value: ", objective_value(OC.model))
 
-f = Figure() 
-ax1 = Axis(f[1,1])
-lines!(ax1, value.(ph.t), value.(ph.x[1,:]))
-ax2 = Axis(f[2,1])
-lines!(ax2, value.(ph.t), value.(ph.x[2,:]))
-# ax3 = Axis(f[1, 2])
-# lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
-ax4 = Axis(f[2, 2])
-lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
-display(f)
-
-fl = Figure()
-ax1 = Axis(fl[1,1])
-lines!(ax1, value.(ph.t[1:end-1]) ,lambda[1,:])
-ax2 = Axis(fl[2,1])
-lines!(ax2, value.(ph.t[1:end-1]) ,lambda[2,:])
-
-fmu = Figure()
-axmu = Axis(fmu[1,1])
-lines!(axmu, value.(ph.t), mu[1,:])
+## f = Figure() 
+## ax1 = Axis(f[1,1])
+## lines!(ax1, value.(ph.t), value.(ph.x[1,:]))
+## ax2 = Axis(f[2,1])
+## lines!(ax2, value.(ph.t), value.(ph.x[2,:]))
+## # ax3 = Axis(f[1, 2])
+## # lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
+## ax4 = Axis(f[2, 2])
+## lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
+## display(f)
+ 
+## fl = Figure()
+## ax1 = Axis(fl[1,1])
+## lines!(ax1, value.(ph.t[1:end-1]) ,lambda[1,:])
+## ax2 = Axis(fl[2,1])
+## lines!(ax2, value.(ph.t[1:end-1]) ,lambda[2,:])
+ 
+## fmu = Figure()
+## axmu = Axis(fmu[1,1])
+## lines!(axmu, value.(ph.t), mu[1,:])

@@ -3,7 +3,6 @@
 
 import DirectOptimalControl as DOC
 import Ipopt
-using GLMakie
 using JuMP
 
 OC = DOC.OCP()
@@ -61,7 +60,6 @@ end
 
 
 
-#------------------------------------------------------
 # Phase 1
 ph = DOC.PH(OC)
 ph.L = L
@@ -102,9 +100,6 @@ ph.set_initial_vals = "Auto"
 function psi(ocp::DOC.OCP)
     (;ph) = ocp
 
-
-
-    # return [v2;]
     return nothing
 end
 
@@ -126,18 +121,19 @@ ph.callback_fun = callback_fun
 
 DOC.setup_mpocp(OC)
 DOC.solve_mpocp(OC)
-# DOC.solve(OC)
-# Solve for the control and state
+## DOC.solve(OC)
+
 solution_summary(OC.model)
 
 # Display results
 println("Objective Value: ", objective_value(OC.model))
 
 
-f1, ax1, l1 = lines(value.(ph.t), value.(ph.x[1,:]))
-f2, ax2, l2 = lines(value.(ph.t), value.(ph.x[2,:]))
-f3, ax3, l3 = lines(value.(ph.t), value.(ph.x[3,:]))
-f4, ax4, l4 = lines(value.(ph.t), value.(ph.x[4,:]))
-fu1 = lines(value.(ph.t), value.(ph.u[1,:]))
-fu2 = lines(value.(ph.t), value.(ph.u[2,:]))
+## using GLMakie
+## f1, ax1, l1 = lines(value.(ph.t), value.(ph.x[1,:]))
+## f2, ax2, l2 = lines(value.(ph.t), value.(ph.x[2,:]))
+## f3, ax3, l3 = lines(value.(ph.t), value.(ph.x[3,:]))
+## f4, ax4, l4 = lines(value.(ph.t), value.(ph.x[4,:]))
+## fu1 = lines(value.(ph.t), value.(ph.u[1,:]))
+## fu2 = lines(value.(ph.t), value.(ph.u[2,:]))
 

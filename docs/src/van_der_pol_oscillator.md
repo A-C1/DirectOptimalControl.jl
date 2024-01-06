@@ -1,27 +1,19 @@
 #### Goddard's rocket Model
 
 State variables:
-* Velocity: $x_v(t)$
-* Altitude: $x_h(t)$
-* Mass of rocket and remaining fuel, $x_m(t)$
+* $y_1(t)$
+* $y_2(t)$
 
 Control variables
-* Thrust: $u_t(t)$.
+* $u(t)$.
 
 Dynamics:
- * Rate of ascent: $$\frac{d x_h}{dt} = x_v$$
- * Acceleration: $$\frac{d x_v}{dt} = \frac{u_t - D(x_h, x_v)}{x_m} - g(x_h)$$
- * Rate of mass loss: $$\frac{d x_m}{dt} = -\frac{u_t}{c}$$
-where drag $D(x_h, x_v)$ is a function of altitude and velocity, gravity
-$g(x_h)$ is a function of altitude, and $c$ is a constant.
-These forces are defined as:
-$$D(x_h, x_v) = D_c \cdot x_v^2 \cdot e^{-h_c \left( \frac{x_h-x_h(0)}{x_h(0)} \right)}$$
-$$g(x_h) = g_0 \cdot \left( \frac{x_h(0)}{x_h} \right)^2$$
+ * $$\frac{d y_1}{dt} = y_2$$
+ * $$\frac{d y_2}{dt} = (1 - {y_1}^2)y_2 - y_1 + u$$
 
-Outputs:
-
+Outputs: No outputs for this problem
 Objective:
-Maximize $x_h(T)$.
+Minimize $$.
 
 State Constraints:
 For this probelem there are no state constraints
@@ -35,7 +27,7 @@ For this problem there are no path constraints
 Integral Constraints:
 For this problem there are no integral constraints
 
-#### Start code
+Start code
 Include the necessary packages. `JuMP` is required to setup various configurations
 while `Ipopt` is the solver to be used. Technically all other nonlinear solvers available
 throught JuMP can be used but those have not yet been tested.
@@ -43,12 +35,14 @@ throught JuMP can be used but those have not yet been tested.
 ````julia
 # include("../src/DirectOptimalControl.jl")
 # import .DirectOptimalControl as DOC
+
 import DirectOptimalControl as DOC
+
 using JuMP
 import Ipopt
+using GLMakie
 ````
 
-#### Set solver configuration
 Let us set first create an optimal control problem. The structure which stores all the data related to the
 optimal control problem is called OCP (Optimal control problem).
 
@@ -63,8 +57,8 @@ Now we will set various parameters for the solver
 
 ````julia
 OC.tol = 1e-7
-OC.mesh_iter_max = 10
-OC.objective_sense = "Max"
+OC.mesh_iter_max = 20
+OC.objective_sense = "Min"
 ````
 
 Now it is time to select an optimizer. Let us select the Ipopt optimizer. The OC struct contains an `JuMP` model in its field
@@ -85,22 +79,15 @@ Each OCP must contain atleast one phase. The synatax for adding the phase to an 
 ph = DOC.PH(OC)
 ````
 
-#### Define the models and cost functions
+# Define the models and cost functions
 Now let us define the parameters and functions which make up the model
 
 ````julia
-h0 = 1                      # Initial height
-v0 = 0                      # Initial velocity
-m0 = 1.0                    # Initial mass
-mT = 0.6                    # Final mass
-g0 = 1                      # Gravity at the surface
-hc = 500                    # Used for drag
-c = 0.5 * sqrt(g0 * h0)     # Thrust-to-fuel mass
-Dc = 0.5 * 620 * m0 / g0    # Drag scaling
-utmax = 3.5 * g0 * m0       # Maximum thrust
-Tmax = 0.2                  # Number of seconds
+y10 = 1                      # Initial height
+y20 = 0                      # Initial velocity
+p1 = -0.4
 
-x0 = [h0, v0, m0]           # Initial state
+x0 = [y10, y20]           # Initial state
 
 ph.nk = 0                               # Number of auxillary phase parameters to be optimized
 ph.k = @variable(OC.model, [1:ph.nk])   # Assigne them to field k in struct `ph`
@@ -115,9 +102,9 @@ Note that in addition to the constants defined above we can also pass two additi
 be used in this example.
 
 ````julia
-p = (g0 = g0, hc = hc, c = c, Dc = Dc, xh0 = h0, utmax = utmax, x0 = x0, kp = ph.k, kg = OC.kg )
+p = (p1 = p1, x0 = x0, kp = ph.k, kg = OC.kg )
 
-ns = 3
+ns = 2
 nu = 1
 n = 20
 ````
@@ -131,35 +118,33 @@ t : The time t
 p : p is a named tuple of auzillary parameters required to define the fucntion
 
 ````julia
-D(xh, xv, p) = p.Dc*(xv^2)*exp(-p.hc*(xh - p.xh0)/p.xh0)
-g(xh, p) = p.g0*(p.xh0/xh)^2
 function dyn(x, u, t, p)
-    xhn = x[2]
-    xvn = (u[1] - D(x[1], x[2], p))/x[3] - g(x[1], p)
-    xmn = -u[1]/p.c
-    return [xhn, xvn, xmn]
+    y1 = x[1]; y2 = x[2];
+    u = u[1]
+
+    y1n = y2
+    y2n = (1-y1^2)*y2 - y1 + u
+
+    return [y1n, y2n]
 end
 ````
 
 #### Objective Function
 The objective function consists of running cost and a fixed cost.
 The running cost function also has syntax similar to the dynamics function.
-For the rocket example there is no running cost involved so the running
-cost function returns 0.
 
 ````julia
 function L(x, u, t, p)
-    return 0.0
+    return u[1]^2 + x[1]^2 + x[2]^2
 end
 ````
 
 The Final cost function involves the contribution of final state in the objective
-Since we want to maximize the final height the function returns `xf[1]`. This is because
-the first state denotes the height as per our definition of the heigth function.
+No final cost is involved
 
 ````julia
 function phi(xf, uf, tf, p)
-    return xf[1]
+    return 0.0
 end
 ````
 
@@ -179,11 +164,15 @@ Since this problem does not have an path constraint the `pathfun` will return `n
 
 ````julia
 function pathfun(x, u, t, p)
+    y1 = x[1]; y2 = x[2]
+    u = u[1]
+    return -y2 + p.p1
+end
+
+function integralfun(x, u, t, p)
     return nothing
 end
 ````
-
-#### Adding functions and parameters to a Phase
 
 Now let us assign the various functions defined above to the phase `ph` that we have created
 
@@ -197,7 +186,7 @@ ph.n = n    # Number of points in initial mesh
 ph.ns = ns  # State dimension
 ph.nu = nu  # Input dimension
 ph.nq = 0   # Dimension of the quadrature (integral) constraint
-ph.np = 0   # Dimension of the path constraints
+ph.np = 1   # Dimension of the path constraints
 ph.p = p    # Auxillary parametrs named tuple
 ````
 
@@ -225,29 +214,27 @@ If we want a particular variable to have a fixwd value set both the upper limits
 to the same value
 
 ````julia
-ph.limits.ll.u = [0.0]      # Lower bounds on input. Vector of dimension `nu`
-ph.limits.ul.u = [p.utmax]  # Upper bounds on input. Vector of dimesion `nu`
-ph.limits.ll.x = [0.0, 0.0, 0.0] # Lower bounds on state trajectory. Vector of dimension `ns`
-ph.limits.ul.x = [2.0, 2.0, 2.0] # Upper bounds on state trajectory. Vector of dimesion `ns`
-ph.limits.ll.xf = [0.3, 0, mT]      # Lower bounds on final state. Vector of dimension `nu`
-ph.limits.ul.xf = [2.0, 2.0, 2.0]   # Upper bounds on input. Vector of dimesion `ns`
+ph.limits.ll.u = [-2.0]      # Lower bounds on input. Vector of dimension `nu`
+ph.limits.ul.u = [2.0]  # Upper bounds on input. Vector of dimesion `nu`
+ph.limits.ll.x = [-2.0, -2.0] # Lower bounds on state trajectory. Vector of dimension `ns`
+ph.limits.ul.x = [2.0, 2.0] # Upper bounds on state trajectory. Vector of dimesion `ns`
+ph.limits.ll.xf = [-2.0, -2.0]      # Lower bounds on final state. Vector of dimension `nu`
+ph.limits.ul.xf = [2.0, 2.0]   # Upper bounds on input. Vector of dimesion `ns`
 ph.limits.ll.xi = p.x0  # Lower bounds on initial state. Vector of dimension `ns`
 ph.limits.ul.xi = p.x0  # Upper bounds on initial state. Vector of dimesion `ns`
 ph.limits.ll.ti = 0.0   # Lower bounds on initial time. A Scalar.
-ph.limits.ul.ti = 0.0   # Upper bounds on initial time. A Scalar.
-ph.limits.ll.tf = 0.2   # Lower bounds on final time. A scalar.
-ph.limits.ul.tf = 0.2   # Upper bounds on final time. A scalar.
-ph.limits.ll.dt = 0.0     # Lower bounds on time interval. A scalar.
-ph.limits.ul.dt = 0.2     # Upper bounds on time interval. A scalar
-ph.limits.ll.path = [] # Lower bounds on path constraint. Vector of dimension `nu`
-ph.limits.ul.path = [] # Upper bounds on  path constraint. Vector of dimesion `ns`
-ph.limits.ll.integral = [] # Lower bounds on integral constraint. Vector of dimension `nu`
-ph.limits.ul.integral = [] # Upper bounds on integral contsraint. Vector of dimesion `ns`
-ph.limits.ll.k = [] # Lower bounds on phase parameters. Vector of dimension `nu`
-ph.limits.ul.k = [] # Upper bounds on phase parameters. Vector of dimesion `ns`
+ph.limits.ul.ti = 0.0   # Upper bounds on initial time. A Scalar
+ph.limits.ll.tf = 5.0   # Lower bounds on input. Vector of dimension `nu`
+ph.limits.ul.tf = 5.0   # Upper bounds on input. Vector of dimesion `ns`
+ph.limits.ll.dt = 0.0     # Lower bounds on input. Vector of dimension `nu`
+ph.limits.ul.dt = 5.0     # Upper bounds on input. Vector of dimesion `ns`
+ph.limits.ll.k = [] # Lower bounds on input. Vector of dimension `nu`
+ph.limits.ul.k = [] # Upper bounds on input. Vector of dimesion `ns`
+ph.limits.ll.path = [-10.0]
+ph.limits.ul.path = [0.0]
 ````
 
-#### Set intial values
+### Set intial values
 There are two options here "Auto" and "Manual". If "Auto" option is selected one need not specify tau and other init values
 
 ````julia
@@ -260,7 +247,7 @@ ph.tiinit = ph.limits.ll.ti
 ph.kinit  = (ph.limits.ll.k + ph.limits.ul.k)/2
 ````
 
-#### Specify global parameters
+## Specify global parameters
 This problem only contains a single phase. However, in problems with multiple phases there are
 parameters which are global to all the phases. We specify it here.
 ### Set limits on objective function
@@ -273,7 +260,7 @@ OC.obj_llim = -2.0
 OC.obj_ulim = 2.0
 ````
 
-#### Setting up global parameters
+## Setting up global parameters
 * OC.nkg: Number of global parameters
 * OC.kg_llim: Lower bound on global parameters
 * OC.kg_ulim: Upper bound on global parameters
@@ -284,16 +271,16 @@ OC.kg_llim = []
 OC.kg_ulim = []
 ````
 
-#### Setting up the event function
+## Setting up the event function
 *`OC.npsi`: Number of constraints in event function
 *`OC.psi_llim`: Lower bound on constraint function
 *`OC.psi_ulim`: Upper bound on constraint function
 *`OC.psi` : Function which contains the event constraints
 
 ````julia
-OC.npsi = 1
-OC.psi_llim = [0.0]
-OC.psi_ulim = [0.0]
+OC.npsi = 0
+OC.psi_llim = []
+OC.psi_ulim = []
 ````
 
 Not the format of he event function `psi`. It takes the OCP object as input.
@@ -306,23 +293,9 @@ variable which can be accessed by `ph.u`. In this problem we want that
 function psi(ocp::DOC.OCP)
     (;ph) = ocp
 
-    v1 = ph[1].u[:, end]
-
-    return [v1;]
+    return nothing
 end
 OC.psi = psi
-````
-
-Callback function can be used to log variables
-Set it to return nothing if you do not want to log variables in mesh iterations
-
-````julia
-ph.callback_nt = (tau_hist = Vector{Float64}[],err_hist = Vector{Float64}[])
-function callback_fun(ph::DOC.PH)
-    push!(ph.callback_nt.tau_hist, deepcopy(ph.tau))
-    push!(ph.callback_nt.err_hist, deepcopy(ph.error))
-end
-ph.callback_fun = callback_fun
 ````
 
 Call function to setup the JuMP model for solving optimal control problem
@@ -343,41 +316,38 @@ DOC.solve(OC)
 solution_summary(OC.model)
 ````
 
+Compute co-states
+
+````julia
+lambda = DOC.differential_constraints_adjoints(ph, OC)
+mu = DOC.path_constraint_adjoints(ph, OC)
+````
+
 Display results
 
 ````julia
 println("Objective Value: ", objective_value(OC.model))
 
-# using GLMakie
 # f = Figure()
 # ax1 = Axis(f[1,1])
 # lines!(ax1, value.(ph.t), value.(ph.x[1,:]))
 # ax2 = Axis(f[2,1])
 # lines!(ax2, value.(ph.t), value.(ph.x[2,:]))
-# ax3 = Axis(f[1, 2])
-# lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
+# # ax3 = Axis(f[1, 2])
+# # lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
 # ax4 = Axis(f[2, 2])
 # lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
 # display(f)
 
-# fth = Figure()
-# axth = Axis(fth[1,1])
-# n = length(ph.callback_nt.tau_hist)
-# for i = 1:n
-#     ni = length(ph.callback_nt.tau_hist[i])
-#     tau = ph.callback_nt.tau_hist[i]
-#     scatter!(axth,tau,i*ones(ni))
-# end
+# fl = Figure()
+# ax1 = Axis(fl[1,1])
+# lines!(ax1, value.(ph.t[1:end-1]) ,lambda[1,:])
+# ax2 = Axis(fl[2,1])
+# lines!(ax2, value.(ph.t[1:end-1]) ,lambda[2,:])
 
-# feh = Figure()
-# axeh = Axis(feh[1,1])
-# n = length(ph.callback_nt.err_hist)
-# for i = 3:n
-#     ni = length(ph.callback_nt.err_hist[i])
-#     err = ph.callback_nt.err_hist[i]
-#     tau = ph.callback_nt.tau_hist[i]
-#     lines!(axeh,tau[1:end-1],err)
-# end
+# fmu = Figure()
+# axmu = Axis(fmu[1,1])
+# lines!(axmu, value.(ph.t), mu[1,:])
 ````
 
 ---

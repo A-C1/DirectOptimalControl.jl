@@ -11,6 +11,7 @@ pages = [
     "Rocket Control" => "rocket.md",
     "Alp Rider" => "alprider.md",
     "Dubins multiple phase" => "dubins_multiple_phase.md",
+    "Dubins Interception" => "dubins_interception.md",
     "Hyper sensetive problem" => "hyper_sensetive_problem.md",
     "Space craft" => "spacecraft.md",
     "Tumor antiogenesis" => "tumor_antiogenesis.md",

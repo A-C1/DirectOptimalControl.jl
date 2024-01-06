@@ -1,9 +1,10 @@
 ````julia
-include("../src/DirectOptimalControl.jl")
-import .DirectOptimalControl as DOC
+# include("../src/DirectOptimalControl.jl")
+# import .DirectOptimalControl as DOC
+
+import DirectOptimalControl as DOC
 
 import Ipopt
-using GLMakie
 using JuMP
 
 
@@ -12,13 +13,13 @@ OC.tol = 1e-12
 OC.mesh_iter_max = 5
 OC.objective_sense = "Min"
 set_optimizer(OC.model, Ipopt.Optimizer)
+set_attribute(OC.model, "print_level", 0)
+# set_attribute(OC.model, "max_iter", 500)
+# set_attribute(OC.model, "tol", 1e-4)
 ````
 
-set_attribute(OC.model, "print_level", 0)
-set_attribute(OC.model, "max_iter", 500)
-set_attribute(OC.model, "tol", 1e-4)
-
 Parameters:
+Data Required by Problem
 
 ````julia
 zeta = 0.084
@@ -29,6 +30,8 @@ mu = 0.02
 a = 75
 A = 15
 ````
+
+Boundary Conditions
 
 ````julia
 pMax = ((b-mu)/d)^(3/2)
@@ -99,11 +102,6 @@ ph.integralfun = integralfun
 ph.collocation_method = "trapezoidal"
 
 ph.n = n
-````
-
-ph.tau = range(start = 0, stop = 1, length = ph.n)
-
-````julia
 ph.ns = ns
 ph.nu = nu
 ph.nq = nq
@@ -143,19 +141,9 @@ end
 
 OC.psi = psi
 OC.npsi = 0
-````
 
-Add an option to give intial condition
-c = NOC.add_phase(ph1, OC)
-
-````julia
 DOC.setup_mpocp(OC)
-DOC.solve(OC)
-````
-
-Solve for the control and state
-
-````julia
+DOC.solve_mpocp(OC)
 solution_summary(OC.model)
 ````
 
@@ -163,15 +151,12 @@ Display results
 
 ````julia
 println("Min time: ", objective_value(OC.model))
-````
 
-x, u, dt, oc = NOC.solve(OC)
-
-````julia
-fx1, ax1, l1 = scatter(value.(ph.t), value.(ph.x[1,:]))
-fx2, ax2, l2 = scatter(value.(ph.t), value.(ph.x[2,:]))
-fu1 = scatter(value.(ph.t), value.(ph.u[1,:]))
-fx1
+# using GLMakie
+# fx1, ax1, l1 = scatter(value.(ph.t), value.(ph.x[1,:]))
+# fx2, ax2, l2 = scatter(value.(ph.t), value.(ph.x[2,:]))
+# fu1 = scatter(value.(ph.t), value.(ph.u[1,:]))
+# fx1
 ````
 
 ---

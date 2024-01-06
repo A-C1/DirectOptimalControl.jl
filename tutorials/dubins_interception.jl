@@ -2,9 +2,7 @@
 ## import .DirectOptimalControl as DOC
 
 import DirectOptimalControl as DOC
-
 import Ipopt
-using GLMakie
 using JuMP
 using Interpolations
 
@@ -75,13 +73,13 @@ OC.objective_sense = "Min"
 set_optimizer(OC.model, Ipopt.Optimizer)
 set_attribute(OC.model, "linear_solver", "mumps")
 set_attribute(OC.model, "print_level", 0)
-# # set_attribute(OC.model, "max_iter", 500)
-# set_attribute(OC.model, "tol", 1e-6)
+## set_attribute(OC.model, "max_iter", 500)
+## set_attribute(OC.model, "tol", 1e-6)
 
 @operator(OC.model, op_xval, 1, xval)
 @operator(OC.model, op_yval, 1, yval)
-# #------------------------------------------------------
-# # Phase 1
+
+# #### Phase 1
 ph = DOC.PH(OC)
 ph.L = L
 ph.phi = phi
@@ -96,7 +94,7 @@ ph.nu = nu
 ph.nq = 0
 ph.nk = 0
 
-# # Auxillary parameters 
+# #### Auxillary parameters 
 ph.p = (k1 = 1.0, k2 = 2.0)
 
 ph.limits.ll.u = [-1.0, 0.75*vm]
@@ -126,28 +124,28 @@ ph.set_initial_vals = "Auto"
 function psi(ocp::DOC.OCP)
     (;ph) = ocp
 
-    # # Phase 1
-    # v1 = ph[1].ti - 0.0
-    # v2 = ph[1].xf - ph[1].p.xfref
-    # v3 = ph[1].xi - ph[1].p.x0
-
-    # # Phase 2
+    ## # Phase 1
+    ## v1 = ph[1].ti - 0.0
+    ## v2 = ph[1].xf - ph[1].p.xfref
+    ## v3 = ph[1].xi - ph[1].p.x0
+     
+    ## # Phase 2
     v4 = ph[2].ti - ph[1].tf
-    # v5 = ph[2].xi - ph[1].xf
-    # v6 = ph[2].xf - [-5, 5, 0.0]
-
-    # # Phase 3
+    ## v5 = ph[2].xi - ph[1].xf
+    ## v6 = ph[2].xf - [-5, 5, 0.0]
+     
+    ## # Phase 3
     v7 = ph[3].ti - ph[2].tf
-    # v8 = ph[3].xi - ph[2].xf
-    # v9 = ph[3].xf - [-5, -5, 0.0]
-
-    # # Phase 4
+    ## v8 = ph[3].xi - ph[2].xf
+    ## v9 = ph[3].xf - [-5, -5, 0.0]
+     
+    ## # Phase 4
     v10 = ph[4].ti - ph[3].tf
-    # v11 = ph[4].xi - ph[3].xf
-    # v12 = ph[4].xf - ph[4].p.x0
-
-    # return [v1; v2; v3; v4; v5; v6; v7; v8; v9; v10; v11; v12]#; v13; v14; v15]
-    # return [v4, v7, v10]
+    ## v11 = ph[4].xi - ph[3].xf
+    ## v12 = ph[4].xf - ph[4].p.x0
+     
+    ## return [v1; v2; v3; v4; v5; v6; v7; v8; v9; v10; v11; v12]#; v13; v14; v15]
+    ## return [v4, v7, v10]
     return nothing
 end
 
@@ -160,8 +158,8 @@ OC.psi_llim = []
 OC.psi_ulim = []
 DOC.setup_mpocp(OC)
 
+## Final conditions
 function additional_constraints(ph, OC)
-    # Final conditions
     @constraint(OC.model, (ph.xf[1] - op_xval(ph.tf))^2 + (ph.xf[2] - op_yval(ph.tf))^2 <= l * l)
 end
 OC.additional_constraints = additional_constraints
@@ -177,16 +175,14 @@ solution_summary(OC.model)
 # Display results
 println("Min time: ", objective_value(OC.model))
 
-# x, u, dt, oc = NOC.solve(OC)
 
-f1, ax1, l1 = lines(value.(ph.x[1, :]), value.(ph.x[2, :]))
-lines!(ax1, x_e, y_e)
-ax1.autolimitaspect = 1.0
-# f1
-
-f2, ax2, l21 = lines(value.(ph.t), value.(ph.u[1, :]))
-f2
-
-f3, ax3, l31 = lines(value.(ph.t), value.(ph.u[2, :]))
-f3
+## using GLMakie
+## f1, ax1, l1 = lines(value.(ph.x[1, :]), value.(ph.x[2, :]))
+## lines!(ax1, x_e, y_e)
+## ax1.autolimitaspect = 1.0
+## # f1
+## f2, ax2, l21 = lines(value.(ph.t), value.(ph.u[1, :]))
+## f2
+## f3, ax3, l31 = lines(value.(ph.t), value.(ph.u[2, :]))
+## f3
 

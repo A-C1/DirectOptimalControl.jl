@@ -2,9 +2,7 @@
 ## import .DirectOptimalControl as DOC
 
 import DirectOptimalControl as DOC
-
 import Ipopt
-using GLMakie
 using JuMP
 
 # Common parameters
@@ -14,21 +12,8 @@ ns = 3     # Number of states
 nu = 2     # Number of inputs
 n = 20    # Time steps
 
-# x20 = [0, 0, -π / 2]
-# x2f = [5.0, 5.0, π / 2 + π / 4]
-# p2 = (xf=x2f, x0=x10, vm = vm, um = um, t0 = 0.0)
-
-# x30 = [0, 0, -π / 2]
-# x3f = [5.0, 5.0, π / 2 + π / 4]
-# p3 = (xf=x3f, x0=x10, vm = vm, um = um, t0 = 0.0)
-# x40 = [0, 0, -π / 2]
-# x4f = [5.0, 5.0, π / 2 + π / 4]
-# p4 = (xf=x4f, x0=x10, vm = vm, um = um, t0 = 0.0)
-# xf = [-5.0, 0.0, 0.0]
-
 # System dynamics
 function dyn(x, u, t, p)
-    # vm = p.vm
     return [u[2] * cos(x[3]), u[2] * sin(x[3]), u[1]]
 end
 
@@ -57,11 +42,10 @@ OC.objective_sense = "Min"
 set_optimizer(OC.model, Ipopt.Optimizer)
 set_attribute(OC.model, "linear_solver", "mumps")
 set_attribute(OC.model, "print_level", 0)
-# # set_attribute(OC.model, "max_iter", 500)
+## set_attribute(OC.model, "max_iter", 500)
 set_attribute(OC.model, "tol", 1e-6)
 
-# #------------------------------------------------------
-# # Phase 1
+# Phase 1
 ph1 = DOC.PH(OC)
 ph1.L = L
 ph1.phi = phi
@@ -76,7 +60,7 @@ ph1.nu = nu
 ph1.nq = 0
 ph1.nk = 0
 
-# # Auxillary parameters 
+# Auxillary parameters 
 ph1.p = (k1 = 1.0, k2 = 2.0)
 
 ph1.limits.ll.u = [-1.0, 0.75*vm]
@@ -100,11 +84,9 @@ ph1.limits.ul.k = []
 # Set initial values
 ph1.set_initial_vals = "Auto"  
 
-# ------------------------------------------------------
 
 
-# #------------------------------------------------------
-# # Phase 2
+# Phase 2
 ph2 = DOC.PH(OC)
 ph2.L = L
 ph2.phi = phi
@@ -137,7 +119,6 @@ ph2.limits.ll.tf = ph2.limits.ll.ti + ph2.limits.ll.dt
 ph2.limits.ul.tf = ph2.limits.ul.ti + ph2.limits.ul.dt
 
 
-#------------------------------------------------------
 # Phase 3
 ph3 = DOC.PH(OC)
 ph3.L = L
@@ -169,7 +150,6 @@ ph3.collocation_method = "hermite-simpson"
 ph3.scale_flag = true
 
 
-#------------------------------------------------------
 # Phase 4
 ph4 = DOC.PH(OC)
 ph4.L = L
@@ -204,27 +184,10 @@ ph4.scale_flag = true
 function psi(ocp::DOC.OCP)
     (;ph) = ocp
 
-    # # Phase 1
-    # v1 = ph[1].ti - 0.0
-    # v2 = ph[1].xf - ph[1].p.xfref
-    # v3 = ph[1].xi - ph[1].p.x0
-
-    # # Phase 2
     v4 = ph[2].ti - ph[1].tf
-    # v5 = ph[2].xi - ph[1].xf
-    # v6 = ph[2].xf - [-5, 5, 0.0]
-
-    # # Phase 3
     v7 = ph[3].ti - ph[2].tf
-    # v8 = ph[3].xi - ph[2].xf
-    # v9 = ph[3].xf - [-5, -5, 0.0]
-
-    # # Phase 4
     v10 = ph[4].ti - ph[3].tf
-    # v11 = ph[4].xi - ph[3].xf
-    # v12 = ph[4].xf - ph[4].p.x0
 
-    # return [v1; v2; v3; v4; v5; v6; v7; v8; v9; v10; v11; v12]#; v13; v14; v15]
     return [v4, v7, v10]
 end
 
@@ -238,38 +201,38 @@ OC.psi_ulim = [0.0, 0.0, 0.0]
 
 DOC.setup_mpocp(OC)
 DOC.solve_mpocp(OC)
-# DOC.solve(OC)
+## DOC.solve(OC)
 # Solve for the control and state
 solution_summary(OC.model)
 
 # Display results
 println("Min time: ", objective_value(OC.model))
 
-# x, u, dt, oc = NOC.solve(OC)
 
-f1, ax1, l1 = lines(value.(ph1.x[1, :]), value.(ph1.x[2, :]))
-l2 = lines!(ax1, value.(ph2.x[1, :]), value.(ph2.x[2, :]))
-l3 = lines!(ax1, value.(ph3.x[1, :]), value.(ph3.x[2, :]))
-l4 = lines!(ax1, value.(ph4.x[1, :]), value.(ph4.x[2, :]))
-ax1.autolimitaspect = 1.0
-# f1
-
-f2, ax2, l21 = lines(value.(ph1.t), value.(ph1.u[1, :]))
-l22 = lines!(ax2, value.(ph2.t), value.(ph2.u[1, :]))
-l23 = lines!(ax2, value.(ph3.t), value.(ph3.u[1, :]))
-l24 = lines!(ax2, value.(ph4.t), value.(ph4.u[1, :]))
-f2
-
-f3, ax3, l31 = lines(value.(ph1.t), value.(ph1.u[2, :]))
-l32 = lines!(ax3, value.(ph2.t), value.(ph2.u[2, :]))
-l33 = lines!(ax3, value.(ph3.t), value.(ph3.u[2, :]))
-l34 = lines!(ax3, value.(ph4.t), value.(ph4.u[2, :]))
-f3
-
-
-f4, ax4, l4 = lines(value.(ph1.xinit[1, :]), value.(ph1.xinit[2, :]))
-l2 = lines!(ax4, value.(ph2.xinit[1, :]), value.(ph2.xinit[2, :]))
-l3 = lines!(ax4, value.(ph3.xinit[1, :]), value.(ph3.xinit[2, :]))
-l4 = lines!(ax4, value.(ph4.xinit[1, :]), value.(ph4.xinit[2, :]))
-ax4.autolimitaspect = 1.0
-f4
+## using GLMakie
+## f1, ax1, l1 = lines(value.(ph1.x[1, :]), value.(ph1.x[2, :]))
+## l2 = lines!(ax1, value.(ph2.x[1, :]), value.(ph2.x[2, :]))
+## l3 = lines!(ax1, value.(ph3.x[1, :]), value.(ph3.x[2, :]))
+## l4 = lines!(ax1, value.(ph4.x[1, :]), value.(ph4.x[2, :]))
+## ax1.autolimitaspect = 1.0
+## # f1
+ 
+## f2, ax2, l21 = lines(value.(ph1.t), value.(ph1.u[1, :]))
+## l22 = lines!(ax2, value.(ph2.t), value.(ph2.u[1, :]))
+## l23 = lines!(ax2, value.(ph3.t), value.(ph3.u[1, :]))
+## l24 = lines!(ax2, value.(ph4.t), value.(ph4.u[1, :]))
+## f2
+ 
+## f3, ax3, l31 = lines(value.(ph1.t), value.(ph1.u[2, :]))
+## l32 = lines!(ax3, value.(ph2.t), value.(ph2.u[2, :]))
+## l33 = lines!(ax3, value.(ph3.t), value.(ph3.u[2, :]))
+## l34 = lines!(ax3, value.(ph4.t), value.(ph4.u[2, :]))
+## f3
+ 
+ 
+## f4, ax4, l4 = lines(value.(ph1.xinit[1, :]), value.(ph1.xinit[2, :]))
+## l2 = lines!(ax4, value.(ph2.xinit[1, :]), value.(ph2.xinit[2, :]))
+## l3 = lines!(ax4, value.(ph3.xinit[1, :]), value.(ph3.xinit[2, :]))
+## l4 = lines!(ax4, value.(ph4.xinit[1, :]), value.(ph4.xinit[2, :]))
+## ax4.autolimitaspect = 1.0
+## f4

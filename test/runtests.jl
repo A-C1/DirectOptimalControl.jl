@@ -5,11 +5,11 @@ using Test
     include("../tutorials/rocket.jl")
     @test objective_value(OC.model) ≈ 1.01282 atol = 1e-0
 
-    include("../tutorials/alprider.jl")
-    @test objective_value(OC.model) ≈ 2044.68 atol = 1e-1
-
     include("../tutorials/dubins_interception.jl")
     @test objective_value(OC.model) ≈ 8.490252005787678 atol = 1e-1
+
+    include("../tutorials/alprider.jl")
+    @test objective_value(OC.model) ≈ 2044.68 atol = 1e-1
 
     include("../tutorials/dubins_multiple_phase.jl")
     @test objective_value(OC.model) ≈ 42.82990048690122 atol = 1e-1
