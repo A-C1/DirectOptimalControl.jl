@@ -1,4 +1,6 @@
-# include("../src/DirectOptimalControl.jl")
+## include("../src/DirectOptimalControl.jl")
+## import .DirectOptimalControl as DOC
+
 import DirectOptimalControl as DOC
 
 import Ipopt
@@ -11,7 +13,7 @@ vm = 2.0   # Max forward speed
 um = 1.0   # Max turning speed
 ns = 3     # Number of states
 nu = 2     # Number of inputs
-n = 50    # Time steps
+n = 100    # Time steps
 
 state_e0 = [0.0, 7.0, -π/2]
 N = 200
@@ -65,15 +67,16 @@ function pathfun(x, u, t, p)
     return nothing
 end
 
+
 OC = DOC.OCP()
 OC.tol = 1e-5
-OC.mesh_iter_max = 15
+OC.mesh_iter_max = 5
 OC.objective_sense = "Min"
 set_optimizer(OC.model, Ipopt.Optimizer)
 set_attribute(OC.model, "linear_solver", "mumps")
-# set_attribute(OC.model, "print_level", 0)
+set_attribute(OC.model, "print_level", 0)
 # # set_attribute(OC.model, "max_iter", 500)
-set_attribute(OC.model, "tol", 1e-6)
+# set_attribute(OC.model, "tol", 1e-6)
 
 @operator(OC.model, op_xval, 1, xval)
 @operator(OC.model, op_yval, 1, yval)
@@ -84,7 +87,7 @@ ph.L = L
 ph.phi = phi
 ph.dyn = dyn
 ph.integralfun = integralfun
-ph.collocation_method = "trapezoidal"
+ph.collocation_method = "hermite-simpson"
 ph.scale_flag = true
 
 ph.n = n
@@ -107,9 +110,9 @@ ph.limits.ul.xi = [0, 0, -π / 2]
 ph.limits.ll.ti = 0.0
 ph.limits.ul.ti = 0.0
 ph.limits.ll.tf = 5.0
-ph.limits.ul.tf = 20.0
+ph.limits.ul.tf = 15.0
 ph.limits.ll.dt = 5.0
-ph.limits.ul.dt = 20.0
+ph.limits.ul.dt = 15.0
 ph.limits.ll.k = []
 ph.limits.ul.k = []
 
@@ -151,17 +154,23 @@ end
 OC.psi = psi
 OC.npsi = 0
 OC.set_obj_lim = true
-OC.obj_llim = 0.0
+OC.obj_llim = 5.0
 OC.obj_ulim = 17.0
 OC.psi_llim = []
 OC.psi_ulim = []
 DOC.setup_mpocp(OC)
 
-# Final conditions
-@constraint(OC.model, (ph.xf[1] - op_xval(ph.tf))^2 + (ph.xf[2] - op_yval(ph.tf))^2 <= l * l)
-# @constraint(OC.model, (ph.xf[1] - 5.0)^2 + (ph.xf[2] - 6.0)^2 <= l * l)
+function additional_constraints(ph, OC)
+    # Final conditions
+    @constraint(OC.model, (ph.xf[1] - op_xval(ph.tf))^2 + (ph.xf[2] - op_yval(ph.tf))^2 <= l * l)
+end
+OC.additional_constraints = additional_constraints
 
+# This function needs to be called for single use
+OC.additional_constraints(ph, OC)
 DOC.solve_mpocp(OC)
+
+# DOC.solve(OC)
 # Solve for the control and state
 solution_summary(OC.model)
 
@@ -181,7 +190,3 @@ f2
 f3, ax3, l31 = lines(value.(ph.t), value.(ph.u[2, :]))
 f3
 
-
-f4, ax4, l4 = lines(value.(ph.xinit[1, :]), value.(ph.xinit[2, :]))
-ax4.autolimitaspect = 1.0
-f4

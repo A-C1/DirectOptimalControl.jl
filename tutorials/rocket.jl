@@ -39,6 +39,8 @@
 # Include the necessary packages. `JuMP` is required to setup various configurations
 # while `Ipopt` is the solver to be used. Technically all other nonlinear solvers available
 # throught JuMP can be used but those have not yet been tested.
+## include("../src/DirectOptimalControl.jl")
+## import .DirectOptimalControl as DOC
 import DirectOptimalControl as DOC
 using JuMP
 import Ipopt
@@ -271,8 +273,8 @@ ph.callback_fun = callback_fun
 # Call function to setup the JuMP model for solving optimal control problem
 DOC.setup_mpocp(OC)
 # Solve for the control and state
-# DOC.solve_mpocp(OC)
-DOC.solve(OC)
+DOC.solve_mpocp(OC)
+# DOC.solve(OC)
 solution_summary(OC.model)
 
 # Display results

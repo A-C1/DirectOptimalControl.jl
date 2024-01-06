@@ -167,77 +167,76 @@ function calcerrorphase_split(ph)
 end
 
 function compute_new_mesh_betts(ph::PH, OC::OCP)
-    println("Computing new Mesh....")
-    # for ph in OC.ph
-        # Variables required for the algorithm
-        # it = OC.mesh_iter_no
+    println("Computing new Mesh for phase....")
     error = deepcopy(ph.error)
-        Ivec = zeros(Int64, ph.n-1)
-        Mlim = ph.n
-        M1lim = 5 
-        M = 0
+    Ivec = zeros(Int64, ph.n - 1)
+    Mlim = ph.n
+    M1lim = 5
+    M = 0
 
-        # # Compute index reduction (Does not work currently. Need to correct)
-        # if it == 1
-        #     r = 0
-        # else
-        #     err_ratio = log(ph.error_avg_hist[it-1]/ph.error_avg_hist[it])
-        #     rhat = ph.order + 1 - err_ratio/ log(1+ph.Iavgh[it-1])
-        #     rhatint = Int(round(rhat))
-        #     r = maximum([0, minimum([rhatint, ph.order])])
-        # end
-        r = 3
+    # # Compute index reduction (Does not work currently. Need to correct)
+    # if it == 1
+    #     r = 0
+    # else
+    #     err_ratio = log(ph.error_avg_hist[it-1]/ph.error_avg_hist[it])
+    #     rhat = ph.order + 1 - err_ratio/ log(1+ph.Iavgh[it-1])
+    #     rhatint = Int(round(rhat))
+    #     r = maximum([0, minimum([rhatint, ph.order])])
+    # end
+    r = 3
 
-        terminate = false
-        M1 = 0
-        while !terminate
-            _, imax = findmax(error)
-            Ivec[imax] = Ivec[imax] + 1
-            M = M + 1
+    terminate = false
+    M1 = 0
+    while !terminate
+        _, imax = findmax(error)
+        Ivec[imax] = Ivec[imax] + 1
+        M = M + 1
 
-            # Compute new error
-            # error[imax] = ph.error[imax]*(1/(1+Ivec[imax]))^(ph.order - r + 1)
-            error[imax] = ph.error[imax]*(1/(1+Ivec[imax]))^2
+        # Compute new error
+        # error[imax] = ph.error[imax]*(1/(1+Ivec[imax]))^(ph.order - r + 1)
+        error[imax] = ph.error[imax] * (1 / (1 + Ivec[imax]))^2
 
-            errmax = maximum(error)
+        errmax = maximum(error)
 
-            M1 = maximum(Ivec)
-            # @infiltrate
-            if M >= Mlim || M1 >= M1lim || errmax <= OC.tol
-                terminate = true
-            end
+        M1 = maximum(Ivec)
+        # @infiltrate
+        if M >= Mlim || M1 >= M1lim || OC.tol >= errmax
+            terminate = true
         end
-        push!(ph.Iavgh, Int(ceil(mean(Ivec))))
+    end
+    push!(ph.Iavgh, Int(ceil(mean(Ivec))))
 
-        # Adding the vectors
-        dtaun = Float64[]
-        unew = Vector{Float64}[]
-        xnew = Vector{Float64}[]
-        for i = 1:ph.n-1
-            if Ivec[i] > 0
-                dh = collect(range(start=ph.tau[i], stop=ph.tau[i+1], length=(Ivec[i]+1)))
-                append!(dtaun, dh[1:end-1])
-                append!(unew,[value.(ph.u[:,i]) for j = 1:length(dh)-1])
-                append!(xnew,[value.(ph.x[:,i]) for j = 1:length(dh)-1])
-            else
-                push!(dtaun, ph.tau[i])
-                push!(unew, value.(ph.u[:,i]))
-                push!(xnew, value.(ph.x[:,i]))
-            end
+    # Adding the vectors
+    dtaun = Float64[]
+    unew = Vector{Float64}[]
+    xnew = Vector{Float64}[]
+    # @infiltrate
+    for i = 1:ph.n-1
+        if Ivec[i] > 0
+            dh = collect(range(start=ph.tau[i], stop=ph.tau[i+1], length=(Ivec[i] + 2)))
+            append!(dtaun, dh[1:end-1])
+            append!(unew, [value.(ph.u[:, i]) for j = 1:length(dh)-1])
+            append!(xnew, [value.(ph.x[:, i]) for j = 1:length(dh)-1])
+        else
+            push!(dtaun, ph.tau[i])
+            push!(unew, value.(ph.u[:, i]))
+            push!(xnew, value.(ph.x[:, i]))
         end
-        push!(dtaun, ph.tau[end])
-        push!(unew, value.(ph.u[:,end]))
-        push!(xnew, value.(ph.x[:,end]))
+    end
+    # @infiltrate
+    push!(dtaun, ph.tau[end])
+    push!(unew, value.(ph.u[:, end]))
+    push!(xnew, value.(ph.x[:, end]))
 
-        ph.tau = dtaun
-        ph.uinit = stack(unew)
-        ph.xinit = stack(xnew)
-        ph.tiinit = ph.tival
-        ph.tfinit = ph.tfval
-        if ph.nk > 0
-            ph.kinit = ph.kval
-        end
-        ph.n = length(dtaun)
+    ph.tau = dtaun
+    ph.uinit = stack(unew)
+    ph.xinit = stack(xnew)
+    ph.tiinit = ph.tival
+    ph.tfinit = ph.tfval
+    if ph.nk > 0
+        ph.kinit = ph.kval
+    end
+    ph.n = length(dtaun)
     # end
 end
 
@@ -249,20 +248,32 @@ function solve(OC::OCP)
     err_avg_hist = Float64[]
     while ((err_avg > OC.tol) && (OC.mesh_iter_no <= OC.mesh_iter_max) && (OC.infeasible_iter_no <= OC.infeasible_iter_max))
         if OC.mesh_iter_no == 1
+            for ph in OC.ph
+                if OC.additional_constraints_flag
+                    OC.additional_constraints(ph, OC)
+                end
+            end
             solve_mpocp(OC)
         else
             setup_mpocp(OC)
+            for ph in OC.ph
+                if OC.additional_constraints_flag
+                    OC.additional_constraints(ph, OC)
+                end
+            end
             solve_mpocp(OC)
         end
         OC.solver_status = termination_status(OC.model)
-        if (OC.solver_status == LOCALLY_SOLVED) || (OC.solver_status == OPTIMAL) || (OC.solver_status == ALMOST_OPTIMAL) || (OC.solver_status == ALMOST_LOCALLY_SOLVED)
+        if ((OC.solver_status == LOCALLY_SOLVED) || (OC.solver_status == OPTIMAL) || (OC.solver_status == ALMOST_OPTIMAL) || (OC.solver_status == ALMOST_LOCALLY_SOLVED))
             OC.infeasible_iter_no = 1
             error = Float64[]
             for ph in OC.ph
                 calcerrorphase_split(ph)
-                ph.callback_fun(ph)
-                compute_new_mesh_betts(ph, OC)
                 append!(error, ph.error)
+                # ph.callback_fun(ph)
+                if OC.mesh_iter_no < OC.mesh_iter_max
+                    compute_new_mesh_betts(ph, OC)
+                end
             end
             err_avg = mean(error)
             push!(err_avg_hist, err_avg)

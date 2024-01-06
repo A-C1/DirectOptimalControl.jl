@@ -31,7 +31,13 @@
 # Include the necessary packages. `JuMP` is required to setup various configurations
 # while `Ipopt` is the solver to be used. Technically all other nonlinear solvers available
 # throught JuMP can be used but those have not yet been tested.
+
+
+## include("../src/DirectOptimalControl.jl")
+## import .DirectOptimalControl as DOC
+
 import DirectOptimalControl as DOC
+
 using JuMP
 import Ipopt
 using GLMakie
@@ -85,7 +91,7 @@ p = (p1 = p1, x0 = x0, kp = ph.k, kg = OC.kg )
 
 ns = 2
 nu = 1
-n = 10
+n = 20
 
 # #### System dynamics
 # Note that the dyn function which defines the dynamics must be in a particular format.
