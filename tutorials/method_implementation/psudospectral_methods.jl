@@ -50,7 +50,7 @@ end
 T = 10
 N = 1000
 h = T/N
-time = range(start = 0, step = 0.5, length = N)
+time = range(start = 0, step = h, length = N)
 
 ns = 2
 nu = 1

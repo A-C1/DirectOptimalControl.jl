@@ -1,4 +1,4 @@
-function path_constraint_adjoints(ph, OC)
+function path_constraint_adjoints(ph)
     n = length(ph.path_constraints_upper)
     m = length(ph.path_constraints_upper[1])
     mu = zeros(m, n)
@@ -20,7 +20,7 @@ function path_constraint_adjoints(ph, OC)
     return mu
 end
 
-function differential_constraints_adjoints(ph, OC)
+function differential_constraints_adjoints(ph)
     n = length(ph.collocation_constraints)
     m = ph.ns
 

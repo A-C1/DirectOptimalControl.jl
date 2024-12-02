@@ -2,7 +2,7 @@
 LimitVars
 
 Struct which defines variables which have bounds.
-Defines following variables: ti, tf, dt, xf, xi, x, u, integral, path, k
+Defines following variables: ti, tf, dt, xf, xi, x, u, c, path, k
 These are to be provided by the user
 """
 mutable struct LimitVars
@@ -13,8 +13,8 @@ mutable struct LimitVars
     xi::Vector{Float64}
     x::Vector{Float64}
     u::Vector{Float64}
-    integral::Vector{Float64}
-    path::Vector{Float64}
+    c::Vector{Float64}
+    y::Vector{Float64}
     k::Vector{Float64}
 
     function LimitVars()
@@ -50,7 +50,7 @@ mutable struct Dims
     n::Int64    # Number of finite elements
     ns::Int64   # State dim
     nu::Int64   # Input dim
-    nq::Int64   # Integral constraint dim
+    nq::Int64   # c constraint dim
     np::Int64   # Path constraint dim
     nk::Int64   # Free parameters dim
 
@@ -66,12 +66,12 @@ Funs
 Various functions required for the optimal control problem. To be provided by
 the user
 """
-struct Funs{L <: Function, P <: Function, D <: Function, PF <: Function, IF <: Function} <: AbstractFuns 
+struct Funs{L <: Function, P <: Function, F <: Function, H <: Function, C <: Function} <: AbstractFuns 
     l::L
     phi::P
-    dyn::D
-    pathfun::PF
-    integralfun::IF
+    f::F
+    h::H
+    c::C
 
     # Use the default constructor
 end
@@ -91,6 +91,7 @@ mutable struct Mesh
     error_avg::Float64
     error_avg_hist::Vector{Float64}
     Iavgh::Vector{Int64}
+    tol::Float64
 end
 
 function Mesh(d::Dims)
@@ -100,8 +101,9 @@ function Mesh(d::Dims)
     error_avg = 0.0
     error_avg_hist = Float64[]
     Iavgh = zeros(d.n-1)
+    tol = 1e-7
 
-    return Mesh(tau, we, error, error_avg, error_avg_hist, Iavgh)
+    return Mesh(tau, we, error, error_avg, error_avg_hist, Iavgh, tol)
 end
 
 """
@@ -141,6 +143,7 @@ mutable struct ConfigParams
     # Additional flags
     set_initial_vals::Bool
     scale_flag::Bool
+    solver_type::String
 end
 
 
@@ -154,13 +157,14 @@ mutable struct UnscaledVariables
     ti::AffExpr
     x::Matrix{AffExpr}
     u::Matrix{AffExpr}
+    y::Matrix{NonlinearExpr}
     k::Vector{AffExpr}
 
     xf::Vector{AffExpr}
     xi::Vector{AffExpr}
     t::Vector{AffExpr}
     h::Vector{AffExpr}
-    Δt::AffExpr
+    dt::AffExpr
 end
 
 
@@ -169,7 +173,8 @@ function UnscaledVariables(d::Dims, sv::ScaledVariables, limits::Limits, cp::Con
     tf = scaled_to_unscaled(sv.tfs, limits.ul.tf, limits.ll.tf, cp.scale_flag)
     ti = scaled_to_unscaled(sv.tis, limits.ul.ti, limits.ll.ti, cp.scale_flag)
     x = Matrix{AffExpr}(undef, d.ns, d.n)
-    u = Matrix{AffExpr}(undef, d.ns, d.n)
+    u = Matrix{AffExpr}(undef, d.nu, d.n)
+    y = Matrix{NonlinearExpr}(undef, d.np, d.n)
     for i = 1:d.n
         for j = 1:d.ns
             x[j, i] = scaled_to_unscaled(sv.xs[j,i], limits.ul.x[j], limits.ll.x[j], cp.scale_flag)
@@ -182,7 +187,7 @@ function UnscaledVariables(d::Dims, sv::ScaledVariables, limits::Limits, cp::Con
     k = Vector{AffExpr}(undef, d.nk)
     if d.nk > 0
         for i = 1:d.nk
-            k[i] = scaled_to_unscaled(sv.ks[i], limits.ul.k[i], limits.ll.k[i], sp.scale_flag)
+            k[i] = scaled_to_unscaled(sv.ks[i], limits.ul.k[i], limits.ll.k[i], cp.scale_flag)
         end 
     end
 
@@ -190,11 +195,11 @@ function UnscaledVariables(d::Dims, sv::ScaledVariables, limits::Limits, cp::Con
     xi = @view x[:, 1]    
     
     # Some convinietnt expressions
-    Δt = tf - ti
-    t = @expression(model, [i=1:d.n], ti + m.tau[i]*Δt)
+    dt = tf - ti
+    t = @expression(model, [i=1:d.n], ti + m.tau[i]*dt)
     h = @expression(model, [i=1:d.n-1], (t[i+1] - t[i]))
 
-    return UnscaledVariables(tf, ti, x, u, k, xf, xi, t, h, Δt)
+    return UnscaledVariables(tf, ti, x, u, y, k, xf, xi, t, h, dt)
 end
 
 """
@@ -228,11 +233,14 @@ Store trajectories during various phases of solving optimal
 control problem.
 """
 mutable struct Trajectories
-    xinit::Matrix{Float64}
-    uinit::Matrix{Float64}
-    tfinit::Float64
-    tiinit::Float64
-    kinit::Vector{Float64}
+    x::Matrix{Float64}
+    u::Matrix{Float64}
+    tf::Float64
+    ti::Float64
+    k::Vector{Float64}
+    t::Vector{Float64}
+    h::Vector{Float64}
+    y::Matrix{Float64}
 end
 
 function Trajectories(d::Dims)
@@ -241,8 +249,11 @@ function Trajectories(d::Dims)
     tf = 0.0
     ti = 0.0
     k = zeros(d.nk)
+    t = zeros(d.n)
+    h = zeros(d.n-1)
+    y = zeros(d.np, d.n)
 
-    return Trajectories(x, u, tf, ti, k)
+    return Trajectories(x, u, tf, ti, k, t, h, y)
 end
 
 """
@@ -259,9 +270,9 @@ mutable struct Constraints
 end
 
 function Constraints(d::Dims)
-    collocation_constraints = Array{Vector{ConstraintRef}, 1}(undef, d.n-1)
-    path_constraints_lower = Array{Vector{ConstraintRef}, 1}(undef, d.n)
-    path_constraints_upper = Array{Vector{ConstraintRef}, 1}(undef, d.n)   
+    collocation_constraints = [Vector{ConstraintRef}(undef, d.np) for i =  1:d.n-1]
+    path_constraints_lower = [Vector{ConstraintRef}(undef, d.np) for i =  1:d.n]
+    path_constraints_upper = [Vector{ConstraintRef}(undef, d.np) for i =  1:d.n]   
     quadrature_constraints_lower = Array{ConstraintRef, 1}(undef, d.nq)
     quadrature_constraints_upper = Array{ConstraintRef, 1}(undef, d.nq)
 
@@ -301,6 +312,7 @@ function Phase(id, p, funs, dims, limits, config_params, model)
     sval = Trajectories(dims)
     val = Trajectories(dims)
     cons = Constraints(dims)
+    p = (p..., k = uvars.k)
 
             
     return Phase(id, p, funs, dims, limits, config_params,
@@ -308,62 +320,82 @@ function Phase(id, p, funs, dims, limits, config_params, model)
 end
 
 
-mutable struct OCP
-    ph::Vector{Phase}
-    model::Model
+mutable struct OcpLimitVars
+    kg::Vector{Float64}
+    psi::Vector{Float64}
 
-    # tol::Float64
-    # mesh_iter_no::Int64
-    # mesh_iter_max::Int64
-    # infeasible_iter_no::Int64
-    # infeasible_iter_max::Int64
-    # solver_status::MOI.TerminationStatusCode
+    function OcpLimitVars()
+        return new()
+    end
+end
 
-    # # Variable for global parameters to be optimized
-    # kg::Vector{VariableRef}
-    # obj::NonlinearExpr
+mutable struct OcpLimits
+    ll::OcpLimitVars
+    ul::OcpLimitVars
 
-    # # Dimensions
-    # nkg::Int64
-    # npsi::Int64
-
-    # # limits
-    # psi_ulim::Vector{Float64}
-    # psi_llim::Vector{Float64}
-    # kg_ulim::Vector{Float64}
-    # kg_llim::Vector{Float64}
-    # obj_ulim::Float64
-    # obj_llim::Float64
-
-    # # Objective Sense
-    # objective_sense::String
-    # set_obj_lim::Bool
-
-    # # Global constraints storage
-    # event_constraints_upper::Vector{ConstraintRef}
-    # event_constraints_lower::Vector{ConstraintRef}
-
-    # # Additional constraints
-    # additional_constraints_flag::Bool
-    # additional_constraints::Function
-
-    function OCP()
+    function OcpLimits()
         x = new()
-        x.model = Model(Ipopt.Optimizer)
-        x.ph = Phase[]
-    #     x.ph = Phase[]
-    #     x.mesh_iter_no = 1
-    #     x.mesh_iter_max = 5
-    #     x.infeasible_iter_no = 1
-    #     x.infeasible_iter_max = 5
-    #     x.objective_sense = "Min"
-    #     x.nkg = 0
-    #     x.npsi = 0
-    #     x.set_obj_lim = false
-    #     x.additional_constraints_flag = false
+        x.ll = OcpLimitVars()
+        x.ul = OcpLimitVars()
 
         return x
     end
+end
+
+mutable struct OcpDims
+    nkg::Int64
+    npsi::Int64
+end
+
+mutable struct OcpConfigParams{S}
+    tol::Float64
+    mesh_iter_no::Int64
+    mesh_iter_max::Int64
+    infeasible_iter_no::Int64
+    infeasible_iter_max::Int64
+    solver::S
+    solver_status::MOI.TerminationStatusCode
+    objective_sense::String
+
+    function OcpConfigParams(solver)
+        x = new{typeof(solver)}()
+        x.mesh_iter_no = 1
+        x.mesh_iter_max = 5
+        x.infeasible_iter_no = 1
+        x.infeasible_iter_max = 5
+        x.solver = solver
+        x.objective_sense = "Min"
+
+        return x
+    end
+end
+
+# Avoid passing OCP directly to a function since it can be abstract
+mutable struct OCP{Psi <: Function}
+    ph::Vector{Phase}
+    model::Model
+    psi::Psi
+
+    # Dimensions
+    dims::OcpDims
+
+    # Variable for global parameters to be optimized
+    kgs::Vector{VariableRef}
+    kg::Vector{AffExpr}
+
+    # limits
+    limits::OcpLimits
+
+    # Configuration parameters
+    config_params::OcpConfigParams
+end
+
+function OCP(d::OcpDims, psi::Function, limits::OcpLimits, cp::OcpConfigParams)
+    ph = Phase[]
+    model = Model(cp.solver)
+    kgs = @variable(model, [1:d.nkg], base_name = "kgs")
+    kg = 1.0*kgs
+    return OCP(ph, model, psi, d, kgs, kg, limits, cp)
 end
 
 function Phase(ocp::OCP, p, funs, dims, limits, config_params)

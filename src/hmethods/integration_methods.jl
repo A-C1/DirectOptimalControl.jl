@@ -1,13 +1,13 @@
 function quadrature_trapezoidal(f, d::Dims, uv::UnscaledVariables, p::NamedTuple, quad_dim::Int64)
-    sum = zeros(NonlinearExpr, quad_dim)
-    for i = 1:d.n-1
-        f1 = [f(uv.x[1:d.ns, i], uv.u[1:d.nu, i], uv.t[i], p);]
-        f2 = [f(uv.x[1:d.ns, i+1], uv.u[1:d.nu, i+1], uv.t[i+1], p);]
-        dx = uv.h[i]*(f1 + f2)/2
+        sum = zeros(NonlinearExpr, quad_dim)
+        for i = 1:d.n-1
+            f1 = [f(uv.x[1:d.ns, i], uv.u[1:d.nu, i], uv.t[i], p);]
+            f2 = [f(uv.x[1:d.ns, i+1], uv.u[1:d.nu, i+1], uv.t[i+1], p);]
+            dx = uv.h[i] * (f1 + f2) / 2
 
-        sum = sum + dx
-    end
-    return sum
+            sum = sum + dx
+        end
+        return sum
 end
 
 # function quadrature_simpson(f, dyn, nq, ph, isscalar)
