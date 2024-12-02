@@ -1,7 +1,7 @@
-## include("../src/DirectOptimalControl.jl")
-## import .DirectOptimalControl as DOC
+include("../src/DirectOptimalControl.jl")
+import .DirectOptimalControl as DOC
 
-import DirectOptimalControl as DOC
+# import DirectOptimalControl as DOC
 import Ipopt
 using JuMP
 using Interpolations
@@ -85,7 +85,7 @@ ph.L = L
 ph.phi = phi
 ph.dyn = dyn
 ph.integralfun = integralfun
-ph.collocation_method = "hermite-simpson"
+ph.collocation_method = "trapezoidal"
 ph.scale_flag = true
 
 ph.n = n

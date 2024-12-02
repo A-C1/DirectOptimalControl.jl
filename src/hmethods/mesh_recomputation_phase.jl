@@ -166,7 +166,7 @@ function calcerrorphase_split(ph)
     # @infiltrate
 end
 
-function compute_new_mesh_betts(ph::PH, OC::OCP)
+function compute_new_mesh_betts(ph::Phase, OC::OCP)
     println("Computing new Mesh for phase....")
     error = deepcopy(ph.error)
     Ivec = zeros(Int64, ph.n - 1)

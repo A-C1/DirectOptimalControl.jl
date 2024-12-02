@@ -35,10 +35,10 @@
 # while `Ipopt` is the solver to be used. Technically all other nonlinear solvers available
 # throught JuMP can be used but those have not yet been tested.
 
-## include("../src/DirectOptimalControl.jl")
-## import .DirectOptimalControl as DOC
+include("../src/DirectOptimalControl.jl")
+import .DirectOptimalControl as DOC
 
-import DirectOptimalControl as DOC
+# import DirectOptimalControl as DOC
 using JuMP
 import Ipopt
 
@@ -235,7 +235,7 @@ ph.p = p    # Auxillary parametrs named tuple
 # Let us select some of the options for the phase 
 # * Collocation method: Two options ["hermite-simpson", "trapezoidal"]. Default is "hermite-simpson"
 # * Scale: Two options `true` or `false`
-ph.collocation_method = "hermite-simpson"
+ph.collocation_method = "trapezoidal"
 ph.scale_flag = true
 
 
@@ -330,21 +330,21 @@ solution_summary(OC.model)
 # Display results
 println("Objective Value: ", objective_value(OC.model))
 
-## using GLMakie
-## f = Figure() 
-## for i = 1:2:ns
-##     ax = Axis(f[i,1])
-##     lines!(ax, value.(ph.t), value.(ph.x[i,:]))
-##     if i+1 <= ns
-##         ax = Axis(f[i,2])
-##         lines!(ax, value.(ph.t), value.(ph.x[i+1,:]))
-##     end
-## end
-## #     ax2 = Axis(f[2,1])
-## # lines!(ax2, value.(ph.t), value.(ph.x[2,:]))
-## # ax3 = Axis(f[1, 2])
-## # lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
-## # ax4 = Axis(f[2, 2])
-## # lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
-## display(f)
+using GLMakie
+f = Figure() 
+for i = 1:2:ns
+    ax = Axis(f[i,1])
+    lines!(ax, value.(ph.t), value.(ph.x[i,:]))
+    if i+1 <= ns
+        ax = Axis(f[i,2])
+        lines!(ax, value.(ph.t), value.(ph.x[i+1,:]))
+    end
+end
+#     ax2 = Axis(f[2,1])
+# lines!(ax2, value.(ph.t), value.(ph.x[2,:]))
+# ax3 = Axis(f[1, 2])
+# lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
+# ax4 = Axis(f[2, 2])
+# lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
+display(f)
 

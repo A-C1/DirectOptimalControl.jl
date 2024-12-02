@@ -32,25 +32,3 @@ function unscaled_to_scaled(x, xu, xl, scale_flag)
 
     return xs
 end
-
-function unscaled_vars!(ph::PH)
-    ph.tf = scaled_to_unscaled(ph.tfs, ph.limits.ul.tf, ph.limits.ll.tf, ph.scale_flag)
-    ph.ti = scaled_to_unscaled(ph.tis, ph.limits.ul.ti, ph.limits.ll.ti, ph.scale_flag)
-    ph.x = deepcopy(ph.xs)
-    ph.u = deepcopy(ph.us)
-    for i = 1:ph.n
-        for j = 1:ph.ns
-            ph.x[j, i] = scaled_to_unscaled(ph.xs[j,i], ph.limits.ul.x[j], ph.limits.ll.x[j], ph.scale_flag)
-        end
-        for j = 1:ph.nu
-            ph.u[j, i] = scaled_to_unscaled(ph.us[j,i], ph.limits.ul.u[j], ph.limits.ll.u[j], ph.scale_flag)
-        end
-    end
-
-    if ph.nk > 0
-        ph.k = deepcopy(ph.ks)
-        for i = 1:ph.nk
-            ph.k[i] = scaled_to_unscaled(ph.ks[i], ph.limits.ul.k[i], ph.limits.ll.k[i], ph.scale_flag)
-        end
-    end
-end

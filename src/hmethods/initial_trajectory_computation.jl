@@ -9,7 +9,7 @@ function set_bounds(x, xl, xu, ns)
 end
 
 
-function generate_initial_trajectory_linear(ph::PH, OC::OCP)
+function generate_initial_trajectory_linear(ph::Phase, OC::OCP)
     # Initial value of states. Move this to a new function
     if OC.mesh_iter_no == 1
         ph.uinit = zeros(ph.nu, ph.n)
@@ -64,7 +64,7 @@ function generate_initial_trajectory_linear(ph::PH, OC::OCP)
 
 end
 
-function auto_generate_init_values(ph::PH, OC::OCP)
+function auto_generate_init_values(ph::Phase, OC::OCP)
     ph.uinit = zeros(ph.nu, ph.n)
     ph.xinit = zeros(ph.ns, ph.n)
     ph.kinit = zeros(ph.nk)
@@ -103,7 +103,7 @@ function auto_generate_init_values(ph::PH, OC::OCP)
     ph.tfinit = (ph.limits.ll.tf + ph.limits.ul.tf) / 2
 end
 
-function set_initial_values(ph::PH)
+function set_initial_values(ph::Phase)
     for i = 1:ph.n
         # Setting initial values of u
         for j = 1:ph.nu

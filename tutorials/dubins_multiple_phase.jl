@@ -1,7 +1,7 @@
-## include("../src/DirectOptimalControl.jl")
-## import .DirectOptimalControl as DOC
+include("../src/DirectOptimalControl.jl")
+import .DirectOptimalControl as DOC
 
-import DirectOptimalControl as DOC
+# import DirectOptimalControl as DOC
 import Ipopt
 using JuMP
 
@@ -10,7 +10,8 @@ vm = 1.0   # Max forward speed
 um = 1.0   # Max turning speed
 ns = 3     # Number of states
 nu = 2     # Number of inputs
-n = 20    # Time steps
+n = 60     # Time steps
+col_meth = "hermite-simpson"
 
 # System dynamics
 function dyn(x, u, t, p)
@@ -39,11 +40,13 @@ OC = DOC.OCP()
 OC.tol = 1e-5
 OC.mesh_iter_max = 15
 OC.objective_sense = "Min"
-set_optimizer(OC.model, Ipopt.Optimizer)
-set_attribute(OC.model, "linear_solver", "mumps")
-set_attribute(OC.model, "print_level", 0)
-## set_attribute(OC.model, "max_iter", 500)
-set_attribute(OC.model, "tol", 1e-6)
+
+# These must be moved inside
+# set_optimizer(OC.model, Ipopt.Optimizer)
+# set_attribute(OC.model, "linear_solver", "mumps")
+# set_attribute(OC.model, "print_level", 0)
+# ## set_attribute(OC.model, "max_iter", 500)
+
 
 # Phase 1
 ph1 = DOC.PH(OC)
@@ -51,7 +54,7 @@ ph1.L = L
 ph1.phi = phi
 ph1.dyn = dyn
 ph1.integralfun = integralfun
-ph1.collocation_method = "hermite-simpson"
+ph1.collocation_method = col_meth
 ph1.scale_flag = true
 
 ph1.n = n
@@ -92,7 +95,7 @@ ph2.L = L
 ph2.phi = phi
 ph2.dyn = dyn
 ph2.integralfun = integralfun
-ph2.collocation_method = "hermite-simpson"
+ph2.collocation_method = col_meth
 ph2.scale_flag = true
 
 ph2.n = n
@@ -146,7 +149,7 @@ ph3.limits.ll.dt = 7.0
 ph3.limits.ul.dt = 20.0
 ph3.limits.ll.tf = ph3.limits.ll.ti + ph3.limits.ll.dt
 ph3.limits.ul.tf = ph3.limits.ul.ti + ph3.limits.ul.dt
-ph3.collocation_method = "hermite-simpson"
+ph3.collocation_method = col_meth
 ph3.scale_flag = true
 
 
@@ -177,7 +180,7 @@ ph4.limits.ll.dt = 7.0
 ph4.limits.ul.dt = 20.0
 ph4.limits.ll.tf = ph4.limits.ll.ti + ph4.limits.ll.dt
 ph4.limits.ul.tf = ph4.limits.ul.ti + ph4.limits.ul.dt
-ph4.collocation_method = "hermite-simpson"
+ph4.collocation_method = col_meth
 ph4.scale_flag = true
 
 # Add the boundary constraints
@@ -195,13 +198,13 @@ OC.psi = psi
 OC.npsi = 3
 OC.set_obj_lim = true
 OC.obj_llim = 0.0
-OC.obj_ulim = 43
+OC.obj_ulim = 65
 OC.psi_llim = [0.0, 0.0, 0.0]
 OC.psi_ulim = [0.0, 0.0, 0.0]
 
 DOC.setup_mpocp(OC)
-DOC.solve_mpocp(OC)
-## DOC.solve(OC)
+# DOC.solve_mpocp(OC)
+DOC.solve(OC)
 # Solve for the control and state
 solution_summary(OC.model)
 
@@ -209,30 +212,30 @@ solution_summary(OC.model)
 println("Min time: ", objective_value(OC.model))
 
 
-## using GLMakie
-## f1, ax1, l1 = lines(value.(ph1.x[1, :]), value.(ph1.x[2, :]))
-## l2 = lines!(ax1, value.(ph2.x[1, :]), value.(ph2.x[2, :]))
-## l3 = lines!(ax1, value.(ph3.x[1, :]), value.(ph3.x[2, :]))
-## l4 = lines!(ax1, value.(ph4.x[1, :]), value.(ph4.x[2, :]))
-## ax1.autolimitaspect = 1.0
-## # f1
+using GLMakie
+f1, ax1, l1 = lines(value.(ph1.x[1, :]), value.(ph1.x[2, :]))
+l2 = lines!(ax1, value.(ph2.x[1, :]), value.(ph2.x[2, :]))
+l3 = lines!(ax1, value.(ph3.x[1, :]), value.(ph3.x[2, :]))
+l4 = lines!(ax1, value.(ph4.x[1, :]), value.(ph4.x[2, :]))
+ax1.autolimitaspect = 1.0
+# f1
  
-## f2, ax2, l21 = lines(value.(ph1.t), value.(ph1.u[1, :]))
-## l22 = lines!(ax2, value.(ph2.t), value.(ph2.u[1, :]))
-## l23 = lines!(ax2, value.(ph3.t), value.(ph3.u[1, :]))
-## l24 = lines!(ax2, value.(ph4.t), value.(ph4.u[1, :]))
-## f2
+f2, ax2, l21 = lines(value.(ph1.t), value.(ph1.u[1, :]))
+l22 = lines!(ax2, value.(ph2.t), value.(ph2.u[1, :]))
+l23 = lines!(ax2, value.(ph3.t), value.(ph3.u[1, :]))
+l24 = lines!(ax2, value.(ph4.t), value.(ph4.u[1, :]))
+f2
  
-## f3, ax3, l31 = lines(value.(ph1.t), value.(ph1.u[2, :]))
-## l32 = lines!(ax3, value.(ph2.t), value.(ph2.u[2, :]))
-## l33 = lines!(ax3, value.(ph3.t), value.(ph3.u[2, :]))
-## l34 = lines!(ax3, value.(ph4.t), value.(ph4.u[2, :]))
-## f3
+f3, ax3, l31 = lines(value.(ph1.t), value.(ph1.u[2, :]))
+l32 = lines!(ax3, value.(ph2.t), value.(ph2.u[2, :]))
+l33 = lines!(ax3, value.(ph3.t), value.(ph3.u[2, :]))
+l34 = lines!(ax3, value.(ph4.t), value.(ph4.u[2, :]))
+f3
  
  
-## f4, ax4, l4 = lines(value.(ph1.xinit[1, :]), value.(ph1.xinit[2, :]))
-## l2 = lines!(ax4, value.(ph2.xinit[1, :]), value.(ph2.xinit[2, :]))
-## l3 = lines!(ax4, value.(ph3.xinit[1, :]), value.(ph3.xinit[2, :]))
-## l4 = lines!(ax4, value.(ph4.xinit[1, :]), value.(ph4.xinit[2, :]))
-## ax4.autolimitaspect = 1.0
-## f4
+f4, ax4, l4 = lines(value.(ph1.xinit[1, :]), value.(ph1.xinit[2, :]))
+l2 = lines!(ax4, value.(ph2.xinit[1, :]), value.(ph2.xinit[2, :]))
+l3 = lines!(ax4, value.(ph3.xinit[1, :]), value.(ph3.xinit[2, :]))
+l4 = lines!(ax4, value.(ph4.xinit[1, :]), value.(ph4.xinit[2, :]))
+ax4.autolimitaspect = 1.0
+f4

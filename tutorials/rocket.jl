@@ -63,7 +63,7 @@ OC.objective_sense = "Max"
 # initially keep the solver tolerance higher so that the optimizer converges. You can set all the solver specific options using the
 # `JuMP` interface to aid the convergence of the solver.
 set_optimizer(OC.model, Ipopt.Optimizer)
-set_attribute(OC.model, "print_level", 0)
+# set_attribute(OC.model, "print_level", 0)
 ## set_attribute(OC.model, "max_iter", 500)
 ## set_attribute(OC.model, "tol", 1e-4)
 
@@ -101,7 +101,7 @@ p = (g0 = g0, hc = hc, c = c, Dc = Dc, xh0 = h0, utmax = utmax, x0 = x0, kp = ph
 
 ns = 3
 nu = 1
-n = 20
+n = 10000
 
 # #### System dynamics
 # Note that the dyn function which defines the dynamics must be in a particular format.
@@ -274,33 +274,33 @@ solution_summary(OC.model)
 # Display results
 println("Objective Value: ", objective_value(OC.model))
 
-## using GLMakie
-## f = Figure() 
-## ax1 = Axis(f[1,1])
-## lines!(ax1, value.(ph.t), value.(ph.x[1,:]))
-## ax2 = Axis(f[2,1])
-## lines!(ax2, value.(ph.t), value.(ph.x[2,:]))
-## ax3 = Axis(f[1, 2])
-## lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
-## ax4 = Axis(f[2, 2])
-## lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
-## display(f)
+using GLMakie
+f = Figure() 
+ax1 = Axis(f[1,1])
+lines!(ax1, value.(ph.t), value.(ph.x[1,:]))
+ax2 = Axis(f[2,1])
+lines!(ax2, value.(ph.t), value.(ph.x[2,:]))
+ax3 = Axis(f[1, 2])
+lines!(ax3, value.(ph.t), value.(ph.x[3,:]))
+ax4 = Axis(f[2, 2])
+lines!(ax4,value.(ph.t), value.(ph.u[1,:]))
+display(f)
  
-## fth = Figure()
-## axth = Axis(fth[1,1])
-## n = length(ph.callback_nt.tau_hist)
-## for i = 1:n
-##     ni = length(ph.callback_nt.tau_hist[i])
-##     tau = ph.callback_nt.tau_hist[i]
-##     scatter!(axth,tau,i*ones(ni))
-## end
+fth = Figure()
+axth = Axis(fth[1,1])
+n = length(ph.callback_nt.tau_hist)
+for i = 1:n
+    ni = length(ph.callback_nt.tau_hist[i])
+    tau = ph.callback_nt.tau_hist[i]
+    scatter!(axth,tau,i*ones(ni))
+end
  
-## feh = Figure()
-## axeh = Axis(feh[1,1])
-## n = length(ph.callback_nt.err_hist)
-## for i = 3:n
-##     ni = length(ph.callback_nt.err_hist[i])
-##     err = ph.callback_nt.err_hist[i]
-##     tau = ph.callback_nt.tau_hist[i]
-##     lines!(axeh,tau[1:end-1],err)
-## end
+feh = Figure()
+axeh = Axis(feh[1,1])
+n = length(ph.callback_nt.err_hist)
+for i = 3:n
+    ni = length(ph.callback_nt.err_hist[i])
+    err = ph.callback_nt.err_hist[i]
+    tau = ph.callback_nt.tau_hist[i]
+    lines!(axeh,tau[1:end-1],err)
+end

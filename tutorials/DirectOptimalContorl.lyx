@@ -1,0 +1,233 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\usepackage{babel}
+\end_preamble
+\use_default_options false
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding iso8859-15
+\fontencoding T1
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 2
+\use_package cancel 0
+\use_package esint 2
+\use_package mathdots 0
+\use_package mathtools 0
+\use_package mhchem 0
+\use_package stackrel 2
+\use_package stmaryrd 0
+\use_package undertilde 0
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 0
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+An 
+\begin_inset Formula $p$
+\end_inset
+
+-phase optimal control problem can be stated in the following general form.
+ Determine the state, 
+\begin_inset Formula ${\bf x^{(p)}}(t)\in\mathbb{R}^{n_{z}^{(p)}}$
+\end_inset
+
+ control 
+\begin_inset Formula ${\bf u^{(p)}}(t)\in\mathbb{R}^{n_{u}^{(p)}}$
+\end_inset
+
+, initial time 
+\begin_inset Formula $t_{i}^{(p)}\in\mathbb{R}$
+\end_inset
+
+, final time 
+\begin_inset Formula $t_{f}^{(p)}\in\mathbb{R}$
+\end_inset
+
+, integrals, 
+\begin_inset Formula ${\bf q}^{(p)}\in\mathbb{R}^{n_{q}^{(p)}}$
+\end_inset
+
+, local parameters 
+\begin_inset Formula ${\bf k_{p}}\in\mathbb{R}^{n_{k}^{(p)}}$
+\end_inset
+
+ in each phase 
+\begin_inset Formula $p\in[1,...,P]$
+\end_inset
+
+, and the static parameters, 
+\begin_inset Formula ${\bf k_{g}}\in\mathbb{R}^{n_{kg}}$
+\end_inset
+
+, that minimize the cost functional 
+\begin_inset Formula 
+\[
+J=\sum_{p=1}^{n}J_{p}
+\]
+
+\end_inset
+
+where,
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+J_{p}=\intop_{t_{i}^{p}}^{t_{f}^{p}}L^{p}({\bf x^{(p)}}(t),{\bf u^{(p)}}(t),t^{(p)},{\bf k},{\bf ap})\ dt^{(p)}+\phi(x^{(p)}(t_{f}^{p}),u^{(p)}(t_{f}^{p}),t_{f}^{(p)},{\bf k},{\bf ap})
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Note: 
+\begin_inset Formula ${\bf ap}$
+\end_inset
+
+ contains all the auxillary parameters used to define various functions,
+ and 
+\begin_inset Formula ${\bf k}=[{\bf k_{p}};{\bf k_{g}}]$
+\end_inset
+
+ is a stacked vector of phase and global parameters which can be optimized.
+ 
+\end_layout
+
+\begin_layout Standard
+The cost funtional 
+\begin_inset Formula $J$
+\end_inset
+
+ must be minimized subject to the following constraints in each phase 
+\begin_inset Formula $p$
+\end_inset
+
+:
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+Path constraints
+\series default
+: Path constraints are the constraints which the states and controls must
+ obey at each instant 
+\begin_inset Formula $t^{(p)}$
+\end_inset
+
+ .
+\begin_inset Formula 
+\[
+{\bf pf_{l}}^{(p)}\leq{\bf pathfun}^{(p)}({\bf x^{p}}(t),{\bf u^{p}}(t),t^{(p)},{\bf k},{\bf ap})\in\mathbb{R}^{n_{pf}^{k}}\leq{\bf pf_{u}}^{(p)}\ \forall\ t^{(p)}\in[t_{i}^{(p)},t_{f}^{(p)}]
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+Integral constraints
+\series default
+: Define 
+\begin_inset Formula 
+\[
+{\bf IF}^{(p)}=\intop_{t_{i}^{p}}^{t_{f}^{p}}{\bf integralfun}^{(p)}({\bf x^{(p)}}(t),{\bf u^{(p)}}(t),t^{(p)},{\bf k},{\bf ap})\ dt^{(p)}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+{\bf if_{l}}^{(p)}\leq{\bf pathfun}({\bf x^{p}}(t),{\bf u^{p}}(t),t^{(p)},{\bf k},{\bf ap})\in\mathbb{R}^{n_{pf}^{k}}\leq{\bf if_{u}}^{(p)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+
+\series bold
+Event constraints
+\series default
+: Events in time are what cause a change of phase.
+ Event constraints represent linkages between initial times, states, inputs
+ and final times, states, inputs between phases.
+\begin_inset Formula 
+\[
+{\bf psi_{u}}^{(p)}\leq{\bf psi}(t_{i}^{(1)},t_{f}^{(1)},{\bf x_{f}}^{(1)},{\bf u_{f}}^{(1)},t_{i}^{(2)},t_{f}^{(2)},{\bf x_{f}}^{(2)},{\bf u_{f}}^{(2)},\ldots t_{i}^{(P)},t_{f}^{(P)},{\bf x_{f}}^{(P)},{\bf u_{f}}^{(P)})\in\mathbb{R}^{n_{psi}^{(p)}}\leq{\bf psi_{u}}^{(p)}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
